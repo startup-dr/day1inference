@@ -1,12 +1,12 @@
-# Day 1 Inference - Fragment System
+# Day 1 Inference
 
-Minimal HTML fragment loading system using Webpack + Handlebars + Markdown.
+Machine learning foundations, guidances, and insights.
 
 ## Setup
 
 ```bash
 npm install
-npm run dev    # Development server
+npm run dev    # Development server at http://localhost:8081
 npm run build  # Production build
 ```
 
@@ -14,33 +14,62 @@ npm run build  # Production build
 
 ```
 ├── content/
-│   └── pages/          # Markdown pages (.md files)
+│   └── pages/          # Markdown articles with frontmatter
 ├── src/
 │   ├── fragments/      # Reusable HTML fragments
-│   ├── index.html      # Main HTML template
 │   └── index.js        # JavaScript entry point
-└── dist/               # Build output (generated)
+├── public/
+│   └── CNAME          # Custom domain configuration
+└── dist/              # Build output (auto-generated)
 ```
 
-## How it works
+## Creating Articles
 
-### Compile-time fragments (Handlebars)
-- Use `{{{fragment-name}}}` in markdown or HTML files
-- Injected during webpack build
-- Use for critical content
+### 1. Create markdown file in `content/pages/`
 
-### Run-time fragments (JavaScript)
-- Use `<div id="fragment-name"></div>` in HTML
-- Loaded via fetch after page load
-- Use for non-critical content
+```markdown
+---
+title: Your Article Title
+category: foundations | guidances | blogs
+date: 2025-12-19
+description: Brief description of the article
+---
 
-## Adding content
+# Your Article Title
 
-### New markdown page
-1. Create `content/pages/mypage.md`
-2. Use `{{{fragment-name}}}` for fragments
-3. Access at `http://localhost:8081/mypage.html`
+Content goes here...
 
-### New fragment
-1. Create `src/fragments/myname.html`
-2. Reference as `{{{fragment-myname}}}` in markdown/HTML
+{{{fragment-name}}}  <!-- Optional: inject fragments -->
+```
+
+### 2. Categories
+
+- **foundations** - Core concepts and fundamentals
+- **guidances** - Best practices and how-to guides  
+- **blogs** - Updates, announcements, and insights
+
+### 3. Build
+
+Articles are automatically:
+- Converted from markdown to HTML
+- Listed on the index page by date (newest first)
+- Grouped by category
+- Accessible at `yourfile.html`
+
+## Fragments
+
+### Compile-time (build injection)
+Use `{{{fragment-name}}}` in markdown/HTML - injected during build
+
+### Run-time (JavaScript loading)
+Use `<div id="fragment-name"></div>` - loaded after page loads
+
+### Create new fragment
+1. Add `src/fragments/myname.html`
+2. Reference as `{{{fragment-myname}}}`
+
+## Deployment
+
+Automatically deploys to GitHub Pages on push to main branch.
+
+Custom domain: day1inference.com
