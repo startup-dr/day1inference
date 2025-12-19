@@ -2,4 +2,4 @@ node_modules/
 *.log
 *.env
 *.cache
-python/**/__pycache__
+python/**/__pycache__dist/
