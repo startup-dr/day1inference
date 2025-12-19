@@ -60,6 +60,7 @@ module.exports = {
                     to: "[name].html",
                     transform: transformMarkdownWithFragments,
                 },
+                { from: "public/CNAME", to: "CNAME" },
             ],
         }),
     ],
