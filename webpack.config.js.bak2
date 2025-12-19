@@ -282,36 +282,6 @@ const transformMarkdownWithFragments = (data, filepath) => {
 const generateIndex = () => {
     const articles = [];
     
-    // Load external links
-    const externalLinksPath = path.join(PAGES_PATH, '../external-links.json');
-    let externalLinks = [];
-    if (fs.existsSync(externalLinksPath)) {
-        externalLinks = JSON.parse(fs.readFileSync(externalLinksPath, 'utf8'));
-        externalLinks.forEach(link => {
-            const date = new Date(link.created);
-            const formattedDate = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                timeZone: 'America/New_York'
-            });
-            
-            articles.push({
-                title: link.title,
-                description: link.description || '',
-                category: link.category,
-                subcategory: link.subcategory || null,
-                image: link.image || null,
-                date: link.created,
-                updated: link.updated || null,
-                displayDate: formattedDate,
-                displayUpdated: null,
-                url: link.url,
-                isExternal: true
-            });
-        });
-    }
-    
     // Find all markdown files (both root level and in folders)
     const findMarkdownFiles = (dir) => {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -396,8 +366,6 @@ const generateIndex = () => {
     };
     
     return { articles, byCategory };
-};
-
 const generateGuidancesHTML = (articles, fragments) => {
     const bySubcategory = {
         solutions: articles.filter(a => a.subcategory === 'solutions'),
@@ -433,7 +401,7 @@ const generateGuidancesHTML = (articles, fragments) => {
                     <div class="guidance-list">
                         ${items.map(a => `
                             <article class="guidance-item" data-title="${a.title.toLowerCase()}" data-description="${a.description.toLowerCase()}">
-                                <h3><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.7em; height: 0.7em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h3>
+                                <h3><a href="${a.url}">${a.title}</a></h3>
                                 <div class="description">${a.description}</div>
                             </article>
                         `).join('')}
@@ -568,13 +536,6 @@ class GenerateIndexPlugin {
                             source: () => categoryHTML,
                             size: () => categoryHTML.length
                         };
-                    } else if (category === 'blogs') {
-                        // Timeline view for blogs
-                        const categoryHTML = generateIndexHTML(sortedArticles, fragments, categoryTitle, `${categoryTitle} articles`, true);
-                        compilation.assets[`${category}.html`] = {
-                            source: () => categoryHTML,
-                            size: () => categoryHTML.length
-                        };
                     } else {
                         const categoryHTML = generateIndexHTML(sortedArticles, fragments, categoryTitle, `${categoryTitle} articles`, false);
                         compilation.assets[`${category}.html`] = {
@@ -590,217 +551,6 @@ class GenerateIndexPlugin {
     }
 }
 
-const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = false) => {
-    if (isMainPage) {
-        // Timeline view for main page
-        return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>
-</head>
-<body>
-    ${fragments['fragment-nav']}
-    
-    <main>
-        <div class="hero">
-            <h1>${title}</h1>
-            <p>${subtitle}</p>
-        </div>
-        
-        <div class="articles">
-            ${articles.map(a => `
-                <article class="article">
-                    <div class="article-content">
-                        <div class="article-text">
-                            <div class="meta">
-                                ${a.category}${a.subcategory ? ` / ${a.subcategory}` : ''} • ${a.displayDate}
-                            </div>
-                            <h2><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h2>
-                            <div class="description">${a.description}</div>
-                        </div>
-                        ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
-                    </div>
-                </article>
-            `).join('')}
-        </div>
-    </main>
-    
-    <style>
-        main {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #1e2933;
-        }
-        .hero p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        
-        .articles {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .article {
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 2rem;
-        }
-        .article:last-child {
-            border-bottom: none;
-        }
-        .article-content {
-            display: flex;
-            gap: 2rem;
-            align-items: flex-start;
-        }
-        .article-text {
-            flex: 1;
-        }
-        .article-image {
-            width: 250px;
-            height: 105px;
-            object-fit: cover;
-            border-radius: 8px;
-            flex-shrink: 0;
-        }
-        .article .meta {
-            color: #999;
-            font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .article h2 {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-        .article h2 a {
-            color: #1e2933;
-            text-decoration: none;
-        }
-        .article h2 a:hover {
-            color: #0066cc;
-        }
-        .article .description {
-            color: #555;
-            line-height: 1.6;
-        }
-    </style>
-</body>
-</html>`;
-    }
-    
-    // Grid view for category pages
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title>
-</head>
-<body>
-    ${fragments['fragment-nav']}
-    
-    <main>
-        <div class="hero">
-            <h1>${title}</h1>
-            <p>${subtitle}</p>
-        </div>
-        
-        <div class="articles-grid">
-            ${articles.map(a => `
-                <article class="article-card">
-                    ${a.image ? `<img src="${a.image}" alt="${a.title}" class="card-image">` : ''}
-                    <div class="card-content">
-                        <div class="meta">
-                            ${a.category}${a.subcategory ? ` / ${a.subcategory}` : ''} • 
-                            ${a.displayUpdated ? `Last Updated ${a.displayUpdated}` : a.displayDate}
-                        </div>
-                        <h2><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h2>
-                        <div class="description">${a.description}</div>
-                    </div>
-                </article>
-            `).join('')}
-        </div>
-    </main>
-    
-    <style>
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #1e2933;
-        }
-        .hero p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        
-        .articles-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-        }
-        .article-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: box-shadow 0.2s;
-        }
-        .article-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .card-image {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-        .card-content {
-            padding: 1.5rem;
-        }
-        .article-card .meta {
-            color: #999;
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .article-card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-        }
-        .article-card h2 a {
-            color: #1e2933;
-            text-decoration: none;
-        }
-        .article-card h2 a:hover {
-            color: #1e2933;
-        }
-        .article-card .description {
-            color: #555;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-    </style>
-</body>
-</html>`;
-};
 
 module.exports = {
     entry: "./src/index.js",

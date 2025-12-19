@@ -58,7 +58,7 @@
     }
     article h2 {
         font-size: 1.8rem;
-        margin-top: 2rem;
+        margin-top: 0.5rem;
         margin-bottom: 1rem;
         color: #1e2933;
     }
@@ -97,23 +97,168 @@
 <nav>
     <a href="index.html" class="logo">Day 1 Inference</a>
     <div class="links">
-        <a href="index.html#foundations">Foundations</a>
-        <a href="index.html#guidances">Guidances</a>
-        <a href="index.html#blogs">Blogs</a>
+        <a href="foundations.html">Foundations</a>
+        <a href="guidances.html">Guidances</a>
+        <a href="blogs.html">Blogs</a>
     </div>
 </nav>
 
-    <main>
-        <article>
+    
+    <div class="article-grid">
+        <header class="article-header">
+            <div class="article-category">Guidances</div>
+            <h1>Best Practices for Model Training</h1>
+            
+        </header>
+        
+        
+    </div>
+    
+    
+    
+    <div class="article-grid">
+        
+        
+        <article class="article-body no-toc">
             <h1>Best Practices for Model Training</h1>
 <p>This is an example guidance article with subcategory and image.</p>
-<h2>Key Points</h2>
+<h2 id="key-points">Key Points</h2>
 <ul>
 <li>Point 1</li>
 <li>Point 2</li>
 </ul>
 
         </article>
-    </main>
+    </div>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+        body {
+            display: grid;
+            grid-template-columns: 
+                [screen-start] minmax(20px, 1fr) 
+                [page-start] 0px 
+                [toc-start] 150px [toc-end text-start] 800px [text-end] 
+                0px [page-end] 
+                minmax(20px, 1fr) [screen-end];
+            grid-column-gap: 32px;
+        }
+        body > * {
+            grid-column: screen;
+        }
+        .article-grid {
+            display: contents;
+        }
+        .article-header {
+            grid-column: text;
+            margin: 3rem 0 2rem 0;
+        }
+        .article-category {
+            color: #999;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .article-header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.25rem;
+            line-height: 1.2;
+        }
+        .article-header .subtitle {
+            font-size: 1.4rem;
+            color: #666;
+        }
+        .banner {
+            grid-column: text;
+            margin: 0 0 2rem 0;
+        }
+        .banner img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .metadata {
+            grid-column: screen;
+            display: grid;
+            grid-template-columns: 
+                [screen-start] minmax(20px, 1fr) 
+                [page-start] 0px 
+                [toc-start] 150px [toc-end text-start] 800px [text-end] 
+                0px [page-end] 
+                minmax(20px, 1fr) [screen-end];
+            grid-column-gap: 32px;
+            padding: 1.5rem 0;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .metadata-wrapper {
+            grid-column: text;
+            display: flex;
+            gap: 3rem;
+        }
+        .meta-item {
+            text-align: left;
+        }
+        .meta-item strong {
+            display: block;
+            color: #999;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+            font-weight: 400;
+        }
+        .meta-item div {
+            color: #444;
+        }
+        .toc {
+            grid-column: screen-start / toc-end;
+            padding: 3rem 3rem 100vh 0;
+            position: sticky;
+            top: 80px;
+            align-self: start;
+            justify-self: end;
+            border-right: 1px solid #e0e0e0;
+        }
+        .toc-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        .toc-link {
+            display: block;
+            color: #666;
+            text-decoration: none;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        .toc-link:hover {
+            color: #0066cc;
+        }
+        .toc-3 {
+            padding-left: 1rem;
+            font-size: 0.8rem;
+        }
+        .article-body {
+            grid-column: text;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #444;
+            min-height: 100vh;
+        }
+    </style>
 </body>
 </html>

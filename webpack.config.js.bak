@@ -282,36 +282,6 @@ const transformMarkdownWithFragments = (data, filepath) => {
 const generateIndex = () => {
     const articles = [];
     
-    // Load external links
-    const externalLinksPath = path.join(PAGES_PATH, '../external-links.json');
-    let externalLinks = [];
-    if (fs.existsSync(externalLinksPath)) {
-        externalLinks = JSON.parse(fs.readFileSync(externalLinksPath, 'utf8'));
-        externalLinks.forEach(link => {
-            const date = new Date(link.created);
-            const formattedDate = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                timeZone: 'America/New_York'
-            });
-            
-            articles.push({
-                title: link.title,
-                description: link.description || '',
-                category: link.category,
-                subcategory: link.subcategory || null,
-                image: link.image || null,
-                date: link.created,
-                updated: link.updated || null,
-                displayDate: formattedDate,
-                displayUpdated: null,
-                url: link.url,
-                isExternal: true
-            });
-        });
-    }
-    
     // Find all markdown files (both root level and in folders)
     const findMarkdownFiles = (dir) => {
         const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -396,8 +366,6 @@ const generateIndex = () => {
     };
     
     return { articles, byCategory };
-};
-
 const generateGuidancesHTML = (articles, fragments) => {
     const bySubcategory = {
         solutions: articles.filter(a => a.subcategory === 'solutions'),
@@ -433,7 +401,7 @@ const generateGuidancesHTML = (articles, fragments) => {
                     <div class="guidance-list">
                         ${items.map(a => `
                             <article class="guidance-item" data-title="${a.title.toLowerCase()}" data-description="${a.description.toLowerCase()}">
-                                <h3><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.7em; height: 0.7em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h3>
+                                <h3><a href="${a.url}">${a.title}</a></h3>
                                 <div class="description">${a.description}</div>
                             </article>
                         `).join('')}
@@ -568,13 +536,6 @@ class GenerateIndexPlugin {
                             source: () => categoryHTML,
                             size: () => categoryHTML.length
                         };
-                    } else if (category === 'blogs') {
-                        // Timeline view for blogs
-                        const categoryHTML = generateIndexHTML(sortedArticles, fragments, categoryTitle, `${categoryTitle} articles`, true);
-                        compilation.assets[`${category}.html`] = {
-                            source: () => categoryHTML,
-                            size: () => categoryHTML.length
-                        };
                     } else {
                         const categoryHTML = generateIndexHTML(sortedArticles, fragments, categoryTitle, `${categoryTitle} articles`, false);
                         compilation.assets[`${category}.html`] = {
@@ -618,7 +579,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
                             <div class="meta">
                                 ${a.category}${a.subcategory ? ` / ${a.subcategory}` : ''} • ${a.displayDate}
                             </div>
-                            <h2><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h2>
+                            <h2><a href="${a.url}">${a.title}</a></h2>
                             <div class="description">${a.description}</div>
                         </div>
                         ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
@@ -678,13 +639,13 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
         .article .meta {
             color: #999;
             font-size: 0.85rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
         .article h2 {
             font-size: 1.5rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
         }
         .article h2 a {
             color: #1e2933;
@@ -729,7 +690,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
                             ${a.category}${a.subcategory ? ` / ${a.subcategory}` : ''} • 
                             ${a.displayUpdated ? `Last Updated ${a.displayUpdated}` : a.displayDate}
                         </div>
-                        <h2><a href="${a.url}">${a.title}${a.isExternal ? ' <svg style="display: inline; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>' : ''}</a></h2>
+                        <h2><a href="${a.url}">${a.title}</a></h2>
                         <div class="description">${a.description}</div>
                     </div>
                 </article>
@@ -792,10 +753,9 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
         .article-card h2 a:hover {
             color: #1e2933;
         }
-        .article-card .description {
+        .article .description {
             color: #555;
             line-height: 1.6;
-            font-size: 0.95rem;
         }
     </style>
 </body>
