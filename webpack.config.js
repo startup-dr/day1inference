@@ -39,7 +39,24 @@ const transformMarkdownWithFragments = (data) => {
     const parsed = matter(data.toString('utf8'));
     const template = Handlebars.compile(parsed.content);
     const mdWithFragments = template(fragments);
-    return markdown.render(mdWithFragments);
+    const htmlContent = markdown.render(mdWithFragments);
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${parsed.data.title || 'Day 1 Inference'}</title>
+</head>
+<body>
+    ${fragments['fragment-nav']}
+    <main>
+        <article>
+            ${htmlContent}
+        </article>
+    </main>
+</body>
+</html>`;
 };
 
 // Generate index page with article listings
@@ -52,18 +69,46 @@ const generateIndex = () => {
         const parsed = matter(content);
         
         if (parsed.data.title && parsed.data.date && parsed.data.category) {
+            const date = new Date(parsed.data.date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                timeZone: 'America/New_York'
+            });
+            
+            let formattedUpdated = null;
+            if (parsed.data.updated) {
+                const updated = new Date(parsed.data.updated);
+                formattedUpdated = updated.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    timeZone: 'America/New_York'
+                });
+            }
+            
             articles.push({
                 title: parsed.data.title,
                 description: parsed.data.description || '',
                 category: parsed.data.category,
+                subcategory: parsed.data.subcategory || null,
+                image: parsed.data.image || null,
                 date: parsed.data.date,
+                updated: parsed.data.updated || null,
+                displayDate: formattedDate,
+                displayUpdated: formattedUpdated,
                 url: path.basename(file, '.md') + '.html'
             });
         }
     });
     
-    // Sort by date descending
-    articles.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort by updated date if exists, otherwise date
+    articles.sort((a, b) => {
+        const dateA = new Date(a.updated || a.date);
+        const dateB = new Date(b.updated || b.date);
+        return dateB - dateA;
+    });
     
     // Group by category
     const byCategory = {
@@ -78,7 +123,7 @@ const generateIndex = () => {
 class GenerateIndexPlugin {
     apply(compiler) {
         compiler.hooks.emit.tapAsync('GenerateIndexPlugin', (compilation, callback) => {
-            const { articles, byCategory } = generateIndex();
+            const { articles } = generateIndex();
             const fragments = loadFragmentsMap();
             
             const indexTemplate = `
@@ -88,54 +133,100 @@ class GenerateIndexPlugin {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Day 1 Inference</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .subtitle { color: #666; margin-bottom: 3rem; }
-        .section { margin-bottom: 3rem; }
-        .section h2 { border-bottom: 2px solid #333; padding-bottom: 0.5rem; }
-        .articles { display: grid; gap: 1.5rem; }
-        .article { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; }
-        .article h3 { margin: 0 0 0.5rem 0; }
-        .article a { text-decoration: none; color: #0066cc; }
-        .article a:hover { text-decoration: underline; }
-        .article .meta { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .article .description { color: #333; }
-    </style>
 </head>
 <body>
-    <h1>Day 1 Inference</h1>
-    <p class="subtitle">Foundations, Guidances, and Insights for Machine Learning</p>
+    ${fragments['fragment-nav']}
     
-    <div class="section">
-        <h2>Latest Articles</h2>
+    <main>
+        <div class="hero">
+            <h1>Day 1 Inference</h1>
+            <p>Machine learning foundations, guidances, and insights</p>
+        </div>
+        
         <div class="articles">
-            ${articles.slice(0, 5).map(a => `
-                <div class="article">
-                    <h3><a href="${a.url}">${a.title}</a></h3>
-                    <div class="meta">${a.category} • ${a.date}</div>
-                    <div class="description">${a.description}</div>
-                </div>
+            ${articles.map(a => `
+                <article class="article">
+                    <div class="article-content">
+                        <div class="article-text">
+                            <div class="meta">
+                                ${a.category}${a.subcategory ? ` / ${a.subcategory}` : ''} • 
+                                ${a.displayUpdated ? `Updated ${a.displayUpdated}` : a.displayDate}
+                            </div>
+                            <h2><a href="${a.url}">${a.title}</a></h2>
+                            <div class="description">${a.description}</div>
+                        </div>
+                        ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image">` : ''}
+                    </div>
+                </article>
             `).join('')}
         </div>
-    </div>
+    </main>
     
-    ${Object.entries(byCategory).map(([cat, items]) => items.length > 0 ? `
-        <div class="section">
-            <h2>${cat.charAt(0).toUpperCase() + cat.slice(1)}</h2>
-            <div class="articles">
-                ${items.map(a => `
-                    <div class="article">
-                        <h3><a href="${a.url}">${a.title}</a></h3>
-                        <div class="meta">${a.date}</div>
-                        <div class="description">${a.description}</div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    ` : '').join('')}
-    
-    <script src="main.bundle.js" type="module" defer></script>
+    <style>
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #1e2933;
+        }
+        .hero p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .articles {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .article {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 2rem;
+        }
+        .article:last-child {
+            border-bottom: none;
+        }
+        .article-content {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .article-text {
+            flex: 1;
+        }
+        .article-image {
+            width: 250px;
+            height: 105px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .article .meta {
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .article h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .article h2 a {
+            color: #1e2933;
+            text-decoration: none;
+        }
+        .article h2 a:hover {
+            color: #0066cc;
+        }
+        .article .description {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
 </body>
 </html>`;
             

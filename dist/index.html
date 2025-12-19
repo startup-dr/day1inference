@@ -5,91 +5,223 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Day 1 Inference</title>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
-        .subtitle { color: #666; margin-bottom: 3rem; }
-        .section { margin-bottom: 3rem; }
-        .section h2 { border-bottom: 2px solid #333; padding-bottom: 0.5rem; }
-        .articles { display: grid; gap: 1.5rem; }
-        .article { border: 1px solid #ddd; padding: 1.5rem; border-radius: 8px; }
-        .article h3 { margin: 0 0 0.5rem 0; }
-        .article a { text-decoration: none; color: #0066cc; }
-        .article a:hover { text-decoration: underline; }
-        .article .meta { color: #666; font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .article .description { color: #333; }
-    </style>
 </head>
 <body>
-    <h1>Day 1 Inference</h1>
-    <p class="subtitle">Foundations, Guidances, and Insights for Machine Learning</p>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.6;
+        color: #333;
+    }
     
-    <div class="section">
-        <h2>Latest Articles</h2>
+    /* Top navigation bar */
+    nav { 
+        background: #1e2933;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    nav .logo { 
+        color: white;
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    nav .links {
+        display: flex;
+        gap: 2rem;
+    }
+    nav .links a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-size: 0.95rem;
+    }
+    nav .links a:hover {
+        color: white;
+    }
+    
+    /* Main content */
+    main { 
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+    }
+    
+    article h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #1e2933;
+    }
+    article h2 {
+        font-size: 1.8rem;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #1e2933;
+    }
+    article h3 {
+        font-size: 1.4rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #1e2933;
+    }
+    article p {
+        margin-bottom: 1rem;
+    }
+    article ul, article ol {
+        margin-left: 2rem;
+        margin-bottom: 1rem;
+    }
+    article code {
+        background: #f5f5f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.9em;
+    }
+    article pre {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+    }
+    article pre code {
+        background: none;
+        padding: 0;
+    }
+</style>
+
+<nav>
+    <a href="index.html" class="logo">Day 1 Inference</a>
+    <div class="links">
+        <a href="index.html#foundations">Foundations</a>
+        <a href="index.html#guidances">Guidances</a>
+        <a href="index.html#blogs">Blogs</a>
+    </div>
+</nav>
+
+    
+    <main>
+        <div class="hero">
+            <h1>Day 1 Inference</h1>
+            <p>Machine learning foundations, guidances, and insights</p>
+        </div>
+        
         <div class="articles">
             
-                <div class="article">
-                    <h3><a href="example-blog.html">Day 1 Inference Launch</a></h3>
-                    <div class="meta">blogs • Thu Dec 18 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                    <div class="description">Announcing the launch of Day 1 Inference</div>
-                </div>
-            
-                <div class="article">
-                    <h3><a href="example-guidance.html">Best Practices for Model Training</a></h3>
-                    <div class="meta">guidances • Wed Dec 17 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                    <div class="description">Practical tips for training machine learning models efficiently</div>
-                </div>
-            
-                <div class="article">
-                    <h3><a href="example-foundation.html">Understanding Neural Networks</a></h3>
-                    <div class="meta">foundations • Sun Dec 14 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                    <div class="description">A comprehensive guide to the fundamentals of neural networks</div>
-                </div>
-            
-        </div>
-    </div>
-    
-    
-        <div class="section">
-            <h2>Foundations</h2>
-            <div class="articles">
-                
-                    <div class="article">
-                        <h3><a href="example-foundation.html">Understanding Neural Networks</a></h3>
-                        <div class="meta">Sun Dec 14 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                        <div class="description">A comprehensive guide to the fundamentals of neural networks</div>
+                <article class="article">
+                    <div class="article-content">
+                        <div class="article-text">
+                            <div class="meta">
+                                guidances / tools • 
+                                Updated Dec 18, 2025
+                            </div>
+                            <h2><a href="example-guidance.html">Best Practices for Model Training</a></h2>
+                            <div class="description">Practical tips for training machine learning models efficiently</div>
+                        </div>
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="Best Practices for Model Training" class="article-image">
                     </div>
-                
-            </div>
-        </div>
-    
-        <div class="section">
-            <h2>Guidances</h2>
-            <div class="articles">
-                
-                    <div class="article">
-                        <h3><a href="example-guidance.html">Best Practices for Model Training</a></h3>
-                        <div class="meta">Wed Dec 17 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                        <div class="description">Practical tips for training machine learning models efficiently</div>
+                </article>
+            
+                <article class="article">
+                    <div class="article-content">
+                        <div class="article-text">
+                            <div class="meta">
+                                blogs • 
+                                Dec 18, 2025
+                            </div>
+                            <h2><a href="example-blog.html">Day 1 Inference Launch</a></h2>
+                            <div class="description">Announcing the launch of Day 1 Inference</div>
+                        </div>
+                        
                     </div>
-                
-            </div>
-        </div>
-    
-        <div class="section">
-            <h2>Blogs</h2>
-            <div class="articles">
-                
-                    <div class="article">
-                        <h3><a href="example-blog.html">Day 1 Inference Launch</a></h3>
-                        <div class="meta">Thu Dec 18 2025 19:00:00 GMT-0500 (Eastern Standard Time)</div>
-                        <div class="description">Announcing the launch of Day 1 Inference</div>
+                </article>
+            
+                <article class="article">
+                    <div class="article-content">
+                        <div class="article-text">
+                            <div class="meta">
+                                foundations • 
+                                Dec 14, 2025
+                            </div>
+                            <h2><a href="example-foundation.html">Understanding Neural Networks</a></h2>
+                            <div class="description">A comprehensive guide to the fundamentals of neural networks</div>
+                        </div>
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="Understanding Neural Networks" class="article-image">
                     </div>
-                
-            </div>
+                </article>
+            
         </div>
+    </main>
     
-    
-    <script src="main.bundle.js" type="module" defer></script>
+    <style>
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #1e2933;
+        }
+        .hero p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .articles {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .article {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 2rem;
+        }
+        .article:last-child {
+            border-bottom: none;
+        }
+        .article-content {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .article-text {
+            flex: 1;
+        }
+        .article-image {
+            width: 250px;
+            height: 105px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .article .meta {
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .article h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .article h2 a {
+            color: #1e2933;
+            text-decoration: none;
+        }
+        .article h2 a:hover {
+            color: #0066cc;
+        }
+        .article .description {
+            color: #555;
+            line-height: 1.6;
+        }
+    </style>
 </body>
 </html>
