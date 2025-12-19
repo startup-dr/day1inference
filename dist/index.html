@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Day 1 Inference</title>
+    <script src="main.bundle.js" type="module" defer></script>
+</head>
+<body>
+    <h1>Day 1 Inference</h1>
+    
+    <!-- Compile-time fragment (injected during build) -->
+    <header style="background: #f0f0f0; padding: 20px; margin-bottom: 20px;">
+    <h2>This is a compile-time fragment</h2>
+    <p>Injected during webpack build using Handlebars</p>
+</header>
+
+    
+    <p>This is the main content.</p>
+    
+    <!-- Run-time fragment (loaded via JavaScript) -->
+    <div id="fragment-example"></div>
+    
+</body>
+</html>
