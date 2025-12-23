@@ -302,7 +302,7 @@ const generateGuidancesHTML = (articles, fragments) => {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Guidances</title>
-    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
     <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
@@ -420,7 +420,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
-    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
     <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
@@ -463,7 +463,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
-    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
     <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
