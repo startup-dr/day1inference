@@ -15,15 +15,23 @@ const loadFragmentsMap = (() => {
     return (articleDir = null) => {
         if (cachedFragments === null) {
             cachedFragments = {};
-            // Load global fragments
-            const files = fs.readdirSync(FRAGMENTS_PATH);
-            files.forEach(file => {
-                if (file.endsWith('.html')) {
-                    const name = file.replace('.html', '');
-                    const content = fs.readFileSync(path.join(FRAGMENTS_PATH, file), "utf8");
-                    cachedFragments[`fragment-${name}`] = content;
-                }
-            });
+            // Load global fragments recursively
+            const walkDir = (dir, basePath = '') => {
+                const files = fs.readdirSync(dir);
+                files.forEach(file => {
+                    const filePath = path.join(dir, file);
+                    const relativePath = path.join(basePath, file);
+                    if (fs.statSync(filePath).isDirectory()) {
+                        walkDir(filePath, relativePath);
+                    } else if (file.endsWith('.html')) {
+                        const nameWithoutExt = relativePath.replace(/\.html$/, '');
+                        const fragmentKey = 'fragment-' + nameWithoutExt.replace(/\\/g, '/').replace(/\//g, '/');
+                        const content = fs.readFileSync(filePath, "utf8");
+                        cachedFragments[fragmentKey] = content;
+                    }
+                });
+            };
+            walkDir(FRAGMENTS_PATH);
         }
         
         // Load article-specific fragments if articleDir provided
@@ -31,14 +39,22 @@ const loadFragmentsMap = (() => {
         if (articleDir) {
             const articleFragmentsPath = path.join(articleDir, 'fragments');
             if (fs.existsSync(articleFragmentsPath)) {
-                const articleFiles = fs.readdirSync(articleFragmentsPath);
-                articleFiles.forEach(file => {
-                    if (file.endsWith('.html')) {
-                        const name = file.replace('.html', '');
-                        const content = fs.readFileSync(path.join(articleFragmentsPath, file), "utf8");
-                        fragments[`fragment-${name}`] = content;
-                    }
-                });
+                const walkDir = (dir, basePath = '') => {
+                    const files = fs.readdirSync(dir);
+                    files.forEach(file => {
+                        const filePath = path.join(dir, file);
+                        const relativePath = path.join(basePath, file);
+                        if (fs.statSync(filePath).isDirectory()) {
+                            walkDir(filePath, relativePath);
+                        } else if (file.endsWith('.html')) {
+                            const nameWithoutExt = relativePath.replace(/\.html$/, '');
+                            const fragmentKey = 'fragment-' + nameWithoutExt.replace(/\\/g, '/').replace(/\//g, '/');
+                            const content = fs.readFileSync(filePath, "utf8");
+                            fragments[fragmentKey] = content;
+                        }
+                    });
+                };
+                walkDir(articleFragmentsPath);
             }
         }
         
@@ -56,6 +72,9 @@ const transformMarkdownWithFragments = (data, filepath) => {
     const articleDir = path.dirname(filepath);
     const fragments = loadFragmentsMap(articleDir);
     const parsed = matter(data.toString('utf8'));
+    
+    // Check if this is a tools subcategory for wider layout
+    const isToolsLayout = parsed.data.subcategory === 'tools';
     
     // Split content into banner and body using <!-- banner-start --> and <!-- banner-end --> markers
     const bannerStartMatch = parsed.content.match(/<!-- banner-start -->([\s\S]*?)<!-- banner-end -->/);
@@ -112,9 +131,10 @@ const transformMarkdownWithFragments = (data, filepath) => {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/styles/main.css">
     <title>${parsed.data.title || 'Day 1 Inference'}</title>
 </head>
-<body>
+<body${isToolsLayout ? ' class="tools-layout"' : ''}>
     ${fragments['fragment-nav']}
     
     <div class="article-grid">
@@ -144,136 +164,6 @@ const transformMarkdownWithFragments = (data, filepath) => {
             ${bodyHtmlWithIds}
         </article>
     </div>
-    
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            overflow-x: hidden;
-        }
-        body {
-            display: grid;
-            grid-template-columns: 
-                [screen-start] minmax(20px, 1fr) 
-                [page-start] 0px 
-                [toc-start] 150px [toc-end text-start] 800px [text-end] 
-                0px [page-end] 
-                minmax(20px, 1fr) [screen-end];
-            grid-column-gap: 32px;
-        }
-        body > * {
-            grid-column: screen;
-        }
-        .article-grid {
-            display: contents;
-        }
-        .article-header {
-            grid-column: text;
-            margin: 3rem 0 2rem 0;
-        }
-        .article-category {
-            color: #999;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
-        }
-        .article-header h1 {
-            font-size: 3rem;
-            margin-bottom: 0.25rem;
-            line-height: 1.2;
-        }
-        .article-header .subtitle {
-            font-size: 1.4rem;
-            color: #666;
-        }
-        .banner {
-            grid-column: text;
-            margin: 0 0 2rem 0;
-        }
-        .banner img {
-            width: 100%;
-            border-radius: 8px;
-        }
-        .metadata {
-            grid-column: screen;
-            display: grid;
-            grid-template-columns: 
-                [screen-start] minmax(20px, 1fr) 
-                [page-start] 0px 
-                [toc-start] 150px [toc-end text-start] 800px [text-end] 
-                0px [page-end] 
-                minmax(20px, 1fr) [screen-end];
-            grid-column-gap: 32px;
-            padding: 1.5rem 0;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        .metadata-wrapper {
-            grid-column: text;
-            display: flex;
-            gap: 3rem;
-        }
-        .meta-item {
-            text-align: left;
-        }
-        .meta-item strong {
-            display: block;
-            color: #999;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 0.25rem;
-            font-weight: 400;
-        }
-        .meta-item div {
-            color: #444;
-        }
-        .toc {
-            grid-column: screen-start / toc-end;
-            padding: 3rem 3rem 100vh 0;
-            position: sticky;
-            top: 80px;
-            align-self: start;
-            justify-self: end;
-            border-right: 1px solid #e0e0e0;
-        }
-        .toc-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #999;
-            margin-bottom: 0.75rem;
-            font-weight: 600;
-        }
-        .toc-link {
-            display: block;
-            color: #666;
-            text-decoration: none;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            margin-bottom: 0.5rem;
-        }
-        .toc-link:hover {
-            color: #0066cc;
-        }
-        .toc-3 {
-            padding-left: 1rem;
-            font-size: 0.8rem;
-        }
-        .article-body {
-            grid-column: text;
-            margin-top: 0.5rem;
-            font-size: 1.1rem;
-            line-height: 1.7;
-            color: #444;
-            min-height: 100vh;
-        }
-    </style>
 </body>
 </html>`;
 };
@@ -412,6 +302,8 @@ const generateGuidancesHTML = (articles, fragments) => {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Guidances</title>
+    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
     ${fragments['fragment-nav']}
@@ -443,79 +335,7 @@ const generateGuidancesHTML = (articles, fragments) => {
         </div>
     </main>
     
-    <style>
-        main {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        .hero {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #1e2933;
-        }
-        .hero p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        .search-box {
-            margin-bottom: 3rem;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .subcategories {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3rem;
-        }
-        .subcategory-section h2 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: #1e2933;
-            border-bottom: 2px solid #1e2933;
-            padding-bottom: 0.5rem;
-        }
-        .guidance-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .guidance-item {
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .guidance-item:last-child {
-            border-bottom: none;
-        }
-        .guidance-item h3 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-        .guidance-item h3 a {
-            color: #1e2933;
-            text-decoration: none;
-        }
-        .guidance-item h3 a:hover {
-            color: #0066cc;
-        }
-        .guidance-item .description {
-            color: #555;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-        .guidance-item.hidden {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles/guidances.css">
     
     <script>
         document.getElementById('search').addEventListener('input', (e) => {
@@ -600,6 +420,8 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
+    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
     ${fragments['fragment-nav']}
@@ -628,76 +450,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
         </div>
     </main>
     
-    <style>
-        main {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #1e2933;
-        }
-        .hero p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        
-        .articles {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .article {
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 2rem;
-        }
-        .article:last-child {
-            border-bottom: none;
-        }
-        .article-content {
-            display: flex;
-            gap: 2rem;
-            align-items: flex-start;
-        }
-        .article-text {
-            flex: 1;
-        }
-        .article-image {
-            width: 250px;
-            height: 105px;
-            object-fit: cover;
-            border-radius: 8px;
-            flex-shrink: 0;
-        }
-        .article .meta {
-            color: #999;
-            font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .article h2 {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-        .article h2 a {
-            color: #1e2933;
-            text-decoration: none;
-        }
-        .article h2 a:hover {
-            color: #0066cc;
-        }
-        .article .description {
-            color: #555;
-            line-height: 1.6;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles/timeline.css">
 </body>
 </html>`;
     }
@@ -710,6 +463,8 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title}</title>
+    <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+    <link rel="stylesheet" href="/styles/main.css">
 </head>
 <body>
     ${fragments['fragment-nav']}
@@ -737,67 +492,7 @@ const generateIndexHTML = (articles, fragments, title, subtitle, isMainPage = fa
         </div>
     </main>
     
-    <style>
-        .hero {
-            text-align: center;
-            margin-bottom: 4rem;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            color: #1e2933;
-        }
-        .hero p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-        
-        .articles-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-        }
-        .article-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: box-shadow 0.2s;
-        }
-        .article-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .card-image {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-        .card-content {
-            padding: 1.5rem;
-        }
-        .article-card .meta {
-            color: #999;
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .article-card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
-        }
-        .article-card h2 a {
-            color: #1e2933;
-            text-decoration: none;
-        }
-        .article-card h2 a:hover {
-            color: #1e2933;
-        }
-        .article-card .description {
-            color: #555;
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles/grid.css">
 </body>
 </html>`;
 };
@@ -812,7 +507,8 @@ module.exports = {
         new CleanWebpackPlugin(),
         new CopyPlugin({
             patterns: [
-                { from: "src/fragments/*", to: "fragments/[name].html" },
+                { from: "src/fragments/**/*", to: "fragments/[name][ext]" },
+                { from: "src/styles/**/*", to: "styles/[name][ext]" },
                 {
                     from: "content/pages/**/*.md",
                     to: ({ context, absoluteFilename }) => {
@@ -833,6 +529,8 @@ module.exports = {
                     noErrorOnMissing: true,
                 },
                 { from: "public/CNAME", to: "CNAME", noErrorOnMissing: true },
+                { from: "public/logo.svg", to: "logo.svg", noErrorOnMissing: true },
+                { from: "public/logo-icon.svg", to: "logo-icon.svg", noErrorOnMissing: true },
             ],
         }),
         new GenerateIndexPlugin(),

@@ -1,0 +1,96 @@
+/* ============================================
+   Guidances Page - 3 Column Layout
+   ============================================ */
+
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #1e2933;
+}
+
+.hero p {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.search-box {
+    margin-bottom: 3rem;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.subcategories {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+}
+
+.subcategory-section h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: #1e2933;
+    border-bottom: 2px solid #1e2933;
+    padding-bottom: 0.5rem;
+}
+
+.guidance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.guidance-item {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.guidance-item:last-child {
+    border-bottom: none;
+}
+
+.guidance-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.guidance-item h3 a {
+    color: #1e2933;
+    text-decoration: none;
+}
+
+.guidance-item h3 a:hover {
+    color: #0066cc;
+}
+
+.guidance-item .description {
+    color: #555;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.guidance-item.hidden {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .subcategories {
+        grid-template-columns: 1fr;
+    }
+}
