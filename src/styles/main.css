@@ -155,6 +155,47 @@ article img {
     margin: 1.5rem 0;
 }
 
+/* ============================================
+   Figure & Figcaption (Distill.pub style)
+   ============================================ */
+
+figure {
+    margin: 2rem 0;
+    display: block;
+    position: relative;
+}
+
+figure.fullwidth {
+    grid-column: text;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+figure img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0;
+}
+
+figcaption {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #666;
+    font-style: italic;
+}
+
+/* Interactive visualizations container */
+.viz-container {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
 article table {
     width: 100%;
     border-collapse: collapse;

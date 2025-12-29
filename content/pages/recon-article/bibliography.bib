@@ -1,0 +1,44 @@
+@misc{chatgpt_stats,
+  title = {ChatGPT Statistics 2025},
+  howpublished = {\url{https://nerdynav.com/chatgpt-statistics/}},
+  note = {OpenAI's ChatGPT processes 2.5 billion prompts per day with 800 million weekly active users as of 2025}
+}
+
+@misc{llama_gpu_requirements,
+  title = {Evaluating Llama 3.3 70B Inference on NVIDIA H100 and A100 GPUs},
+  howpublished = {\url{https://blog.silexdata.com/blog/evaluating-llama-33-70b-inference-h100-a100/}},
+  note = {Running a 70B parameter model at bfloat16 precision requires a minimum of 4x80GB GPUs to accommodate both model weights and KV cache}
+}
+
+@misc{h100_pricing,
+  title = {Should I run Llama 70B on an NVIDIA H100 or A100?},
+  howpublished = {\url{https://jarvislabs.ai/ai-faqs/should-i-run-llama-70b-on-an-nvidia-h100-or-a100}},
+  note = {NVIDIA H100 GPUs are priced between \$29,000 and \$40,000 per unit depending on configuration}
+}
+
+@article{distserve2024,
+  title = {DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving},
+  author = {Zhong, Yinmin and Liu, Shengyu and Chen, Junda and Hu, Jianbo and Zhu, Yibo and Liu, Xuanzhe and Jin, Xin and Zhang, Hao},
+  journal = {arXiv preprint arXiv:2401.09670},
+  year = {2024},
+  url = {https://arxiv.org/abs/2401.09670},
+  note = {Goodput optimizes for the maximum request rate that can be served while meeting both time to first token (TTFT) and time per output token (TPOT) latency constraints}
+}
+
+@inproceedings{orca2022,
+  title = {Orca: A Distributed Serving System for Transformer-Based Generative Models},
+  author = {Yu, Gyeong-In and Jeong, Joo Seong and Kim, Geon-Woo and Kim, Soojeong and Chun, Byung-Gon},
+  booktitle = {USENIX Symposium on Operating Systems Design and Implementation (OSDI)},
+  year = {2022},
+  url = {https://www.usenix.org/conference/osdi22/presentation/yu},
+  note = {Continuous batching (also called iteration-level scheduling) dynamically adds new requests to running batches as they arrive, rather than waiting for full batches. This enables high throughput while maintaining low latency}
+}
+
+@inproceedings{pagedattention2023,
+  title = {Efficient Memory Management for Large Language Model Serving with PagedAttention},
+  author = {Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph E. and Zhang, Hao and Stoica, Ion},
+  booktitle = {ACM Symposium on Operating Systems Principles (SOSP)},
+  year = {2023},
+  url = {https://arxiv.org/abs/2309.06180},
+  note = {PagedAttention manages KV cache memory using virtual memory and paging techniques inspired by operating systems, eliminating memory fragmentation and enabling efficient memory sharing}
+}

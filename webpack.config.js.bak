@@ -134,10 +134,10 @@ const transformMarkdownWithFragments = (data, filepath) => {
     });
     
     // Generate references section if footnotes exist
-    let referencesHtml = '';
+    let appendixHtml = '';
     if (Object.keys(footnotes).length > 0) {
         const sortedRefs = Object.entries(footnotes).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-        referencesHtml = `
+        appendixHtml = `
         <div class="appendix">
             <div class="references">
                 <h2>References</h2>
@@ -184,20 +184,12 @@ const transformMarkdownWithFragments = (data, filepath) => {
 <body${isToolsLayout ? ' class="tools-layout"' : ''}>
     ${fragments['fragment-nav']}
     
-    <header class="article-header-section">
-        <div class="article-header">
-            ${parsed.data.category ? `<div class="article-category">${parsed.data.category.charAt(0).toUpperCase() + parsed.data.category.slice(1)}</div>` : ''}
-            <h1>${parsed.data.title || ''}</h1>
-            ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
-        </div>
-    </header>
-    
-    ${bannerHtml ? `
-    <div class="banner-section">
-        <div class="banner">${bannerHtml}</div>
+    <div class="article-header">
+        ${parsed.data.category ? `<div class="article-category">${parsed.data.category.charAt(0).toUpperCase() + parsed.data.category.slice(1)}</div>` : ''}
+        <h1>${parsed.data.title || ''}</h1>
+        ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
+        ${bannerHtml ? `<div class="banner">${bannerHtml}</div>` : ''}
     </div>
-    ` : ''}
-    
     ${authors.length || reviewers.length || pubDate || publishedDate || updatedDate ? `
     <div class="byline">
         <div class="byline-contents">
@@ -210,13 +202,13 @@ const transformMarkdownWithFragments = (data, filepath) => {
     </div>
     ` : ''}
     
-    <div class="article-content-section">
+    <div class="article-grid">
         ${tocEnabled ? `<aside class="toc">${tocHtml}</aside>` : ''}
         
         <article class="article-body${tocEnabled ? '' : ' no-toc'}">
             ${bodyHtmlWithIds}
-            ${referencesHtml}
         </article>
+        ${appendixHtml}
     </div>
     </div>
 </body>

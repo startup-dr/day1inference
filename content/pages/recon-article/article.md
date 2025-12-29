@@ -21,7 +21,9 @@ discussion_and_review: |
 
 ---
 
-When you send a prompt to a model like Anthropic's Claude, you join hundreds of millions of other users generating billions of requests per day.[^1] Each request routes through models requiring 4 to 8 high-end GPUs[^2] (at roughly $30,000 each)[^3] just to hold the model weights and cache in memory. Traffic patterns swing wildly across timezones and use cases. Peak hours might see 10x the load of quiet periods, yet users expect sub-second response times regardless.
+{{{fragment-inference-performance}}}
+
+When you send a prompt to a model like Anthropic's Claude, you join hundreds of millions of other users generating billions of requests per day.<d-cite key="chatgpt_stats"></d-cite> Each request routes through models requiring 4 to 8 high-end GPUs<d-cite key="llama_gpu_requirements"></d-cite> (at roughly $30,000 each)<d-cite key="h100_pricing"></d-cite> just to hold the model weights and cache in memory. Traffic patterns swing wildly across timezones and use cases. Peak hours might see 10x the load of quiet periods, yet users expect sub-second response times regardless.
 
 This represents a fundamentally new challenge in computing. For the past two decades, infrastructure teams could choose between two well-understood paradigms depending on their workload. LLM inference fits cleanly into neither. Instead, it demands a hybrid approach that borrows lessons from both worlds while introducing entirely new constraints.
 
@@ -41,6 +43,8 @@ This creates a unique tension. Pure HPC approaches fail because batching request
 
 ### Measuring Inference Performance
 
+{{fragment-inference-performance}}
+
 Before exploring how to solve this tension, we need to understand how inference performance is measured. Different applications care about different aspects of the serving experience.
 
 **Time to First Token (TTFT)** measures how long users wait before seeing any response. This metric captures the prefill phase where the entire prompt is processed. A chatbot needs TTFT under 500ms to feel responsive, while a code completion tool requires under 100ms for seamless developer experience. TTFT grows linearly with prompt length because the attention mechanism must process the entire input sequence to create the KV cache before generation can begin.
@@ -55,7 +59,7 @@ These metrics reveal fundamental tradeoffs. Maximizing throughput means using la
 
 ### Goodput as a Unified Metric
 
-This tension gives rise to a new metric for inference systems.[^4] Consider how traditional metrics fall short. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency measured as time to first token captures responsiveness but ignores efficiency.
+This tension gives rise to a new metric for inference systems.<d-cite key="distserve2024"></d-cite> Consider how traditional metrics fall short. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency measured as time to first token captures responsiveness but ignores efficiency.
 
 Goodput provides a unified measure. It quantifies the maximum request rate the system can serve while meeting defined service-level objectives for both TTFT and TPOT. This represents the balance point where expensive GPU resources are used efficiently through high throughput and responses are delivered quickly enough for users through low latency while service-level objectives are met consistently.
 
@@ -156,7 +160,7 @@ Each layer addresses a specific aspect of the inference challenge.
 
 **Routing** provides intelligent load balancing for inference workloads. Unlike traditional web load balancing, inference routing must account for GPU state (model loaded, cache warm), request characteristics (prompt length, model selection), and current load. Requests with common system prompts should route to replicas with those prefixes already cached.
 
-**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching[^5], paged attention[^6], kernel fusion, and quantization to maximize throughput while minimizing latency. Examples include vLLM, TensorRT-LLM, and llama.cpp.
+**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching<d-cite key="orca2022"></d-cite>, paged attention<d-cite key="pagedattention2023"></d-cite>, kernel fusion, and quantization to maximize throughput while minimizing latency. Examples include vLLM, TensorRT-LLM, and llama.cpp.
 
 **Cache** handles storage optimization across multiple levels. KV cache stores intermediate computations within requests. Prefix cache reuses common prompt beginnings across requests. Semantic and API caches reduce redundant processing for similar or identical inputs.
 
@@ -201,15 +205,4 @@ This article provides the foundation for understanding LLM inference architectur
 **Part 5: [Orchestration Layer](https://day1inference.com/orchestration.html)** details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
 
 **Part 6: [Nodes Layer](https://day1inference.com/nodes.html)** covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.
-
-[^1]: OpenAI's ChatGPT processes 2.5 billion prompts per day with 800 million weekly active users as of 2025. Source: [ChatGPT Statistics 2025](https://nerdynav.com/chatgpt-statistics/)
-
-[^2]: Running a 70B parameter model at bfloat16 precision requires a minimum of 4x80GB GPUs to accommodate both model weights and KV cache. Source: [Evaluating Llama 3.3 70B Inference on NVIDIA H100 and A100 GPUs](https://blog.silexdata.com/blog/evaluating-llama-33-70b-inference-h100-a100/)
-
-[^3]: NVIDIA H100 GPUs are priced between $29,000 and $40,000 per unit depending on configuration. Source: [Should I run Llama 70B on an NVIDIA H100 or A100?](https://jarvislabs.ai/ai-faqs/should-i-run-llama-70b-on-an-nvidia-h100-or-a100)
-
-[^4]: Goodput optimizes for the maximum request rate that can be served while meeting both time to first token (TTFT) and time per output token (TPOT) latency constraints. Source: [DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving](https://arxiv.org/abs/2401.09670)
-
-[^5]: Continuous batching (also called iteration-level scheduling) dynamically adds new requests to running batches as they arrive, rather than waiting for full batches. This enables high throughput while maintaining low latency. Source: [Orca: A Distributed Serving System for Transformer-Based Generative Models, OSDI 2022](https://www.usenix.org/conference/osdi22/presentation/yu)
-
-[^6]: PagedAttention manages KV cache memory using virtual memory and paging techniques inspired by operating systems, eliminating memory fragmentation and enabling efficient memory sharing. Source: [Efficient Memory Management for Large Language Model Serving with PagedAttention, SOSP 2023](https://arxiv.org/abs/2309.06180)
+<d-cite key="pagedattention2023"></d-cite>: PagedAttention manages KV cache memory using virtual memory and paging techniques inspired by operating systems, eliminating memory fragmentation and enabling efficient memory sharing. Source: [Efficient Memory Management for Large Language Model Serving with PagedAttention, SOSP 2023](https://arxiv.org/abs/2309.06180)
