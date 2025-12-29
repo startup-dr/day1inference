@@ -134,25 +134,38 @@ const transformMarkdownWithFragments = (data, filepath) => {
     });
     
     // Generate references section if footnotes exist
-    let referencesHtml = '';
+    let appendixHtml = '';
     if (Object.keys(footnotes).length > 0) {
         const sortedRefs = Object.entries(footnotes).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-        referencesHtml = `
-        <div class="references">
-            <h2>References</h2>
-            ${sortedRefs.map(([num, text]) => `
-                <div class="reference-item" id="ref-${num}">
-                    <span class="reference-number">[${num}]</span>
-                    <span>${text}</span>
-                </div>
-            `).join('')}
+        appendixHtml = `
+        <div class="appendix">
+            <div class="references">
+                <h2>References</h2>
+                ${sortedRefs.map(([num, text]) => `
+                    <div class="reference-item" id="ref-${num}">
+                        <span class="reference-number">[${num}]</span>
+                        <span>${text}</span>
+                    </div>
+                `).join('')}
+            </div>
         </div>`;
     }
-    
     const authors = parsed.data.authors || [];
     const reviewers = parsed.data.reviewers || [];
     const subtitle = parsed.data.subtitle || '';
     const pubDate = parsed.data.date ? new Date(parsed.data.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'America/New_York'
+    }) : '';
+    const publishedDate = parsed.data.published ? new Date(parsed.data.published).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'America/New_York'
+    }) : '';
+    const updatedDate = parsed.data.updated ? new Date(parsed.data.updated).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -171,22 +184,20 @@ const transformMarkdownWithFragments = (data, filepath) => {
 <body${isToolsLayout ? ' class="tools-layout"' : ''}>
     ${fragments['fragment-nav']}
     
-    <div class="article-grid">
-        <header class="article-header">
-            ${parsed.data.category ? `<div class="article-category">${parsed.data.category.charAt(0).toUpperCase() + parsed.data.category.slice(1)}</div>` : ''}
-            <h1>${parsed.data.title || ''}</h1>
-            ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
-        </header>
-        
+    <div class="article-header">
+        ${parsed.data.category ? `<div class="article-category">${parsed.data.category.charAt(0).toUpperCase() + parsed.data.category.slice(1)}</div>` : ''}
+        <h1>${parsed.data.title || ''}</h1>
+        ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
         ${bannerHtml ? `<div class="banner">${bannerHtml}</div>` : ''}
     </div>
-    
-    ${authors.length || reviewers.length || pubDate ? `
-    <div class="metadata">
-        <div class="metadata-wrapper">
-            ${authors.length ? `<div class="meta-item"><strong>Authors</strong>${authors.map(a => `<div>${a}</div>`).join('')}</div>` : ''}
-            ${reviewers.length ? `<div class="meta-item"><strong>Reviewers</strong>${reviewers.map(r => `<div>${r}</div>`).join('')}</div>` : ''}
-            ${pubDate ? `<div class="meta-item"><strong>Published</strong><div>${pubDate}</div></div>` : ''}
+    ${authors.length || reviewers.length || pubDate || publishedDate || updatedDate ? `
+    <div class="byline">
+        <div class="byline-contents">
+            ${authors.length ? `<div class="meta-item"><strong>Authors</strong>${authors.map(a => `<div class="meta-name">${a}</div>`).join('')}</div>` : ''}
+            ${reviewers.length ? `<div class="meta-item"><strong>Reviewers</strong>${reviewers.map(r => `<div class="meta-name">${r}</div>`).join('')}</div>` : ''}
+            ${pubDate ? `<div class="meta-item"><strong>Published</strong><div class="meta-date">${pubDate}</div></div>` : ''}
+            ${publishedDate ? `<div class="meta-item"><strong>Published</strong><div class="meta-date">${publishedDate}</div></div>` : ''}
+            ${updatedDate ? `<div class="meta-item"><strong>Updated</strong><div class="meta-date">${updatedDate}</div></div>` : ''}
         </div>
     </div>
     ` : ''}
@@ -197,6 +208,8 @@ const transformMarkdownWithFragments = (data, filepath) => {
         <article class="article-body${tocEnabled ? '' : ' no-toc'}">
             ${bodyHtmlWithIds}
         </article>
+        ${appendixHtml}
+    </div>
     </div>
 </body>
 </html>`;
@@ -212,7 +225,7 @@ const generateIndex = () => {
     if (fs.existsSync(externalLinksPath)) {
         externalLinks = JSON.parse(fs.readFileSync(externalLinksPath, 'utf8'));
         externalLinks.forEach(link => {
-            const date = new Date(link.created);
+            const date = new Date(link.published);
             const formattedDate = date.toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -226,7 +239,7 @@ const generateIndex = () => {
                 category: link.category,
                 subcategory: link.subcategory || null,
                 image: link.image || null,
-                date: link.created,
+                date: link.published,
                 updated: link.updated || null,
                 displayDate: formattedDate,
                 displayUpdated: null,
@@ -263,9 +276,9 @@ const generateIndex = () => {
         const content = fs.readFileSync(file, 'utf8');
         const parsed = matter(content);
         
-        if (parsed.data.title && (parsed.data.created || parsed.data.date) && parsed.data.category) {
-            const created = parsed.data.created || parsed.data.date; // fallback to date for old articles
-            const date = new Date(created);
+        if (parsed.data.title && parsed.data.published && parsed.data.category) {
+            const published = parsed.data.published;
+            const date = new Date(published);
             const formattedDate = date.toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -296,7 +309,7 @@ const generateIndex = () => {
                 category: parsed.data.category,
                 subcategory: parsed.data.subcategory || null,
                 image: parsed.data.image || null,
-                date: created,
+                date: published,
                 updated: parsed.data.updated || null,
                 displayDate: formattedDate,
                 displayUpdated: formattedUpdated,

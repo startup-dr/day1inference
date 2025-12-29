@@ -1,4 +1,0 @@
-<div id="inference-visualizer-root" style="width: 100%; min-height: 800px; margin: 2rem 0;"></div>
-<link rel="stylesheet" href="assets/visualizer.css">
-<link rel="stylesheet" href="assets/visualizer-override.css">
-<script type="module" src="assets/visualizer.js"></script>

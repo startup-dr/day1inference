@@ -2,7 +2,7 @@
 title: Example Article with Folder Structure
 subtitle: Demonstrating the new organized structure
 category: foundations
-created: 2025-12-18
+published: 2025-12-18
 updated: 2025-12-19
 authors:
   - John Doe

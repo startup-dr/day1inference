@@ -2,19 +2,24 @@
 title: The RECON Stack for LLM Inference
 subtitle: Understanding the five layers of modern inference architecture
 category: foundations
-created: 2025-12-29
-updated: 2025-12-29
+published: 2025-12-29
 authors:
   - Kareem Abdol-Hamid
-reviewers:
-  - TBD
 toc: true
 image: data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E
 description: Understanding the five layers of modern inference architecture
+acknowledgments: |
+  We are deeply grateful to Andy Coenen, Brian Lee...
+  
+author_contributions: |
+  All authors contributed to writing...
+  
+discussion_and_review: |
+  Review #1 - Chaitanya K. Joshi
+  Review #2 - Patricia Robinson
+
+
 ---
-
-
-## Section 1: The Unique Challenge of LLM Inference
 
 When you send a prompt to a model like Anthropic's Claude, you join hundreds of millions of other users generating billions of requests per day.[^1] Each request routes through models requiring 4 to 8 high-end GPUs[^2] (at roughly $30,000 each)[^3] just to hold the model weights and cache in memory. Traffic patterns swing wildly across timezones and use cases. Peak hours might see 10x the load of quiet periods, yet users expect sub-second response times regardless.
 
@@ -58,9 +63,7 @@ Importantly, optimal goodput looks different for different applications. A summa
 
 This fundamental challenge drives the need for a purpose-built stack.
 
----
-
-## Section 2: What Actually Happens During Inference?
+## What Happens During Inference
 
 Before diving into the stack architecture, let's ground ourselves in the fundamentals. What physically happens when you generate text?
 
@@ -116,9 +119,7 @@ Consider the web approach of spinning up a GPU instance per request. Each instan
 
 Inference requires something new. Systems must batch dynamically as requests arrive (providing web-scale responsiveness) while maximizing GPU utilization (achieving HPC-scale efficiency). This represents the core engineering challenge and motivates the need for RECON.
 
----
-
-## Section 3: Introducing RECON for Inference
+## Introducing RECON for Inference
 
 Given these constraints of expensive stateful computation requiring both throughput and low latency, we need a specialized stack. This foundational article introduces RECON as follows.
 
@@ -187,8 +188,6 @@ No single "best" configuration exists. The optimal stack depends on your specifi
 
 The following sections provide deep dives into each layer, presenting the decision space and helping you reason about these tradeoffs.
 
----
-
 ## Continue the Series
 
 This article provides the foundation for understanding LLM inference architecture. The following articles dive deep into each RECON layer with implementation details, optimization techniques, and practical examples.
@@ -202,8 +201,6 @@ This article provides the foundation for understanding LLM inference architectur
 **Part 5: [Orchestration Layer](https://day1inference.com/orchestration.html)** details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
 
 **Part 6: [Nodes Layer](https://day1inference.com/nodes.html)** covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.
-
----
 
 [^1]: OpenAI's ChatGPT processes 2.5 billion prompts per day with 800 million weekly active users as of 2025. Source: [ChatGPT Statistics 2025](https://nerdynav.com/chatgpt-statistics/)
 

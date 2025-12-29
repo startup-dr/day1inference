@@ -1,8 +1,0 @@
-<nav>
-    <a href="index.html" class="logo">Day 1 Inference</a>
-    <div class="links">
-        <a href="foundations.html">Foundations</a>
-        <a href="guidances.html">Guidances</a>
-        <a href="blogs.html">Blogs</a>
-    </div>
-</nav>

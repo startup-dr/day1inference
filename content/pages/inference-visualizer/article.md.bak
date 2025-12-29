@@ -1,10 +1,11 @@
 ---
+---
 title: GPU Inference Cluster Visualizer
 description: Interactive simulation of GPU inference clusters with real-time request handling, batching, and performance metrics
 category: guidances
 subcategory: tools
-created: 2024-12-20
-image: assets/preview.png
+published: 2024-12-20
+image: data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E
 toc: false
 ---
 
@@ -14,7 +15,6 @@ This interactive visualizer demonstrates how GPU inference clusters handle concu
 
 <div id="inference-visualizer-root" style="width: 100%; min-height: 800px; margin: 2rem 0;"></div>
 <link rel="stylesheet" href="inference-visualizer/assets/visualizer.css">
-<link rel="stylesheet" href="inference-visualizer/assets/visualizer-override.css">
 <script type="module" src="inference-visualizer/assets/visualizer.js"></script>
 
 ## How to Use

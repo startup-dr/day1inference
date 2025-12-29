@@ -2,7 +2,7 @@
 title: Understanding Neural Networks
 subtitle: A deep dive into the fundamentals
 category: foundations
-created: 2025-12-15
+published: 2025-12-15
 updated: 2025-12-19
 authors:
   - John Doe

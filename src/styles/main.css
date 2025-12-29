@@ -16,6 +16,15 @@ body {
     overflow-x: hidden;
 }
 
+.subgrid {
+  grid-column: screen;
+  display: grid;
+  grid-template-columns: inherit;
+  grid-template-rows: inherit;
+  grid-column-gap: inherit;
+  grid-row-gap: inherit;
+}
+
 /* ============================================
    Navigation Bar
    ============================================ */
@@ -131,7 +140,7 @@ article blockquote {
 }
 
 article a {
-    color: #0066cc;
+    color: inherit;
     text-decoration: none;
 }
 
@@ -179,7 +188,7 @@ article th {
 }
 
 .citation a {
-    color: #0066cc;
+    color: hsla(206, 90%, 20%, 0.7);
     text-decoration: none;
     padding: 0.1em 0.3em;
     border-radius: 3px;
@@ -216,24 +225,35 @@ article th {
     display: block;
 }
 
-/* References section */
-.references {
+/* ============================================
+   Appendix Sections (References, etc.)
+   ============================================ */
+
+.appendix {
     margin-top: 3rem;
     padding-top: 2rem;
     border-top: 2px solid #e0e0e0;
+    font-size: 0.8em;
+    color: rgba(0, 0, 0, 0.5);
+    grid-column-start: toc-start;
+    grid-column-end: text-end;
 }
 
-.references h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: #1e2933;
+.appendix h2 {
+    font-size: 1.25em;
+    margin-bottom: 1rem;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+/* References section */
+.references {
+    margin-bottom: 2rem;
 }
 
 .reference-item {
     margin-bottom: 1.5rem;
     padding-left: 2.5em;
     position: relative;
-    font-size: 0.95rem;
     line-height: 1.6;
 }
 
@@ -241,7 +261,6 @@ article th {
     position: absolute;
     left: 0;
     font-weight: 600;
-    color: #666;
 }
 
 .reference-item a {
@@ -293,7 +312,7 @@ body > * {
     margin: 3rem 0 2rem 0;
 }
 
-.article-category {
+header .article-category {
     color: #999;
     font-size: 0.9rem;
     text-transform: uppercase;
@@ -301,13 +320,13 @@ body > * {
     margin-bottom: 0.5rem;
 }
 
-.article-header h1 {
+header h1 {
     font-size: 3rem;
     margin-bottom: 0.25rem;
     line-height: 1.2;
 }
 
-.article-header .subtitle {
+header .subtitle {
     font-size: 1.4rem;
     color: #666;
 }
@@ -330,7 +349,7 @@ body > * {
    Metadata Section
    ============================================ */
 
-.metadata {
+.byline {
     grid-column: screen;
     display: grid;
     grid-template-columns:
@@ -347,14 +366,14 @@ body > * {
     font-size: 0.9rem;
 }
 
-body.tools-layout .metadata {
+body.tools-layout .byline {
     grid-template-columns:
         [screen-start] minmax(20px, 1fr)
         [page-start toc-start toc-end text-start] 1600px [text-end page-end]
         minmax(20px, 1fr) [screen-end];
 }
 
-.metadata-wrapper {
+.byline-contents {
     grid-column: text;
     display: flex;
     gap: 3rem;
@@ -368,7 +387,7 @@ body.tools-layout .metadata {
     display: block;
     color: #999;
     text-transform: uppercase;
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     letter-spacing: 0.5px;
     margin-bottom: 0.25rem;
     font-weight: 400;
@@ -376,6 +395,15 @@ body.tools-layout .metadata {
 
 .meta-item div {
     color: #444;
+    font-size: 0.8rem;
+}
+
+.meta-item .meta-name {
+    font-weight: 700;
+}
+
+.meta-item .meta-date {
+    font-weight: 400;
 }
 
 /* ============================================
@@ -428,7 +456,7 @@ body.tools-layout .metadata {
     margin-top: 0.5rem;
     font-size: 1rem;
     line-height: 1.65;
-    color: #444;
+    color: rgba(0, 0, 0, 0.8);
     min-height: 100vh;
 }
 
@@ -514,7 +542,7 @@ body.tools-layout .metadata {
     }
 
     /* Content with proper padding */
-    .article-header,
+    header,
     .banner,
     .article-body {
         padding: 0 1rem;
@@ -524,16 +552,16 @@ body.tools-layout .metadata {
     }
 
     /* Article header */
-    .article-header {
+    header {
         margin: 2rem 0 1.5rem 0;
     }
 
-    .article-header h1 {
+    header h1 {
         font-size: 2rem;
         line-height: 1.3;
     }
 
-    .article-header .subtitle {
+    header .subtitle {
         font-size: 1.1rem;
     }
 
@@ -608,11 +636,11 @@ body.tools-layout .metadata {
         font-size: 0.8rem;
     }
 
-    .article-header h1 {
+    header h1 {
         font-size: 1.75rem;
     }
 
-    .article-header .subtitle {
+    header .subtitle {
         font-size: 1rem;
     }
 
