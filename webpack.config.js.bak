@@ -76,18 +76,35 @@ const transformMarkdownWithFragments = (data, filepath) => {
     // Check if this is a tools subcategory for wider layout
     const isToolsLayout = parsed.data.subcategory === 'tools';
     
+    // Extract footnotes from content (footnote definitions at the bottom)
+    const footnotes = {};
+    const footnoteRegex = /\[\^(\d+)\]:\s*(.+?)(?=\n\[\^|\n\n|$)/gs;
+    let match;
+    while ((match = footnoteRegex.exec(parsed.content)) !== null) {
+        footnotes[match[1]] = match[2].trim();
+    }
+    
+    // Remove footnote definitions from content
+    let contentWithoutFootnotes = parsed.content.replace(/\[\^(\d+)\]:\s*.+?(?=\n\[\^|\n\n|$)/gs, '').trim();
+    
     // Split content into banner and body using <!-- banner-start --> and <!-- banner-end --> markers
-    const bannerStartMatch = parsed.content.match(/<!-- banner-start -->([\s\S]*?)<!-- banner-end -->/);
+    const bannerStartMatch = contentWithoutFootnotes.match(/<!-- banner-start -->([\s\S]*?)<!-- banner-end -->/);
     const bannerContent = bannerStartMatch ? bannerStartMatch[1].trim() : '';
     const bodyContent = bannerStartMatch 
-        ? parsed.content.replace(/<!-- banner-start -->[\s\S]*?<!-- banner-end -->/, '').trim()
-        : parsed.content;
+        ? contentWithoutFootnotes.replace(/<!-- banner-start -->[\s\S]*?<!-- banner-end -->/, '').trim()
+        : contentWithoutFootnotes;
     
     const bannerTemplate = Handlebars.compile(bannerContent);
     const bodyTemplate = Handlebars.compile(bodyContent);
     
     const bannerHtml = bannerContent ? markdown.render(bannerTemplate(fragments)) : '';
-    const bodyHtml = markdown.render(bodyTemplate(fragments));
+    let bodyHtml = markdown.render(bodyTemplate(fragments));
+    
+    // Replace inline footnote references [^1] with citation links
+    bodyHtml = bodyHtml.replace(/\[\^(\d+)\]/g, (match, num) => {
+        const footnoteText = footnotes[num] || '';
+        return `<span class="citation"><a href="#ref-${num}">[${num}]</a><span class="citation-popup">${footnoteText}</span></span>`;
+    });
     
     // Generate TOC from headers
     const tocEnabled = parsed.data.toc === true; // default false
@@ -115,6 +132,22 @@ const transformMarkdownWithFragments = (data, filepath) => {
         const id = cleanText.toLowerCase().replace(/[^\w]+/g, '-');
         return `<h${level} id="${id}">${text}</h${level}>`;
     });
+    
+    // Generate references section if footnotes exist
+    let referencesHtml = '';
+    if (Object.keys(footnotes).length > 0) {
+        const sortedRefs = Object.entries(footnotes).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+        referencesHtml = `
+        <div class="references">
+            <h2>References</h2>
+            ${sortedRefs.map(([num, text]) => `
+                <div class="reference-item" id="ref-${num}">
+                    <span class="reference-number">[${num}]</span>
+                    <span>${text}</span>
+                </div>
+            `).join('')}
+        </div>`;
+    }
     
     const authors = parsed.data.authors || [];
     const reviewers = parsed.data.reviewers || [];
