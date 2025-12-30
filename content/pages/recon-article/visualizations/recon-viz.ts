@@ -87,6 +87,7 @@ for (const l of layers) l.cx += dx;
   let currentlyClicked: string | null = null;
   let animationInProgress = false;
   const keywordElements: SVGTextElement[] = [];
+  let animationFrameId: number | null = null;
 
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
@@ -187,7 +188,7 @@ for (const l of layers) l.cx += dx;
       const yMax = isEven ? 70 : 180;
       const yPos = Math.random() * (yMax - yMin) + yMin;
       
-      const fontSize = Math.floor(Math.random() * 18) + 24; // Random 16-20
+      const fontSize = Math.floor(Math.random() * 16) + 20; // Random 16-20
       
       const xPos = isEven ? lastEvenX : lastOddX;
       
@@ -204,10 +205,23 @@ for (const l of layers) l.cx += dx;
       keywordText.style.pointerEvents = 'none';
       keywordText.style.transition = 'opacity 0.6s ease-out';
       
+      // Store original position and animation parameters for floating effect
+      (keywordText as any).originalX = xPos;
+      (keywordText as any).originalY = yPos;
+      (keywordText as any).floatOffset = Math.random() * Math.PI * 2; // Random phase
+      (keywordText as any).floatSpeed = 0.001 + Math.random() * 0.001; // Speed (0.001-0.002 for visible but slow)
+      (keywordText as any).floatAmplitudeX = .5 + Math.random() * 0.5; // Horizontal movement (3-7px)
+      (keywordText as any).floatAmplitudeY = .5 + Math.random() * 0.5; // Vertical movement (3-7px)
+      
       svg.appendChild(keywordText);
       keywordElements.push(keywordText);
       
-      // Fade in
+      // Start animation immediately (before fade-in) for the first keyword
+      if (i === 0 && animationFrameId === null) {
+        animationFrameId = requestAnimationFrame(animateKeywords);
+      }
+      
+      // Fade in - animation runs simultaneously
       await new Promise(resolve => setTimeout(resolve, 50));
       keywordText.setAttribute('opacity', '1');
       
@@ -223,9 +237,39 @@ for (const l of layers) l.cx += dx;
     }
   }
 
+  // Animation loop for floating keywords
+  function animateKeywords(timestamp: number) {
+    keywordElements.forEach(el => {
+      const originalX = (el as any).originalX;
+      const originalY = (el as any).originalY;
+      const offset = (el as any).floatOffset;
+      const speed = (el as any).floatSpeed;
+      const amplitudeX = (el as any).floatAmplitudeX;
+      const amplitudeY = (el as any).floatAmplitudeY;
+      
+      if (originalX !== undefined && originalY !== undefined) {
+        const dx = Math.sin(timestamp * speed + offset) * amplitudeX;
+        const dy = Math.cos(timestamp * speed + offset * 1.3) * amplitudeY;
+        
+        el.setAttribute('x', String(originalX + dx));
+        el.setAttribute('y', String(originalY + dy));
+      }
+    });
+    
+    if (keywordElements.length > 0) {
+      animationFrameId = requestAnimationFrame(animateKeywords);
+    }
+  }
+
   
 
   async function resetAnimation() {
+    // Stop animation loop
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    
     // Fade out keywords first
     keywordElements.forEach(el => {
       el.setAttribute('opacity', '0');
