@@ -1,0 +1,48 @@
+import React, { useState } from 'react';
+
+export default function RequestQueue({ queue }) {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const newRequests = queue.filter(r => !r.isContinuation).length;
+  const continuations = queue.length - newRequests;
+
+  return (
+    <div className="viz-panel">
+      <div className="viz-panel-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <div>
+          <h2>📋 Request Queue ({queue.length})</h2>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            <span style={{ marginRight: '16px' }}>🔵 New ({newRequests})</span>
+            <span>🟢 Continuation ({continuations})</span>
+          </div>
+        </div>
+        <button className="viz-collapse-btn">
+          {isExpanded ? '▼' : '▶'}
+        </button>
+      </div>
+      
+      {isExpanded && (
+        <div className="viz-queue">
+        {queue.length === 0 ? (
+          <div className="viz-queue-empty">Queue is empty</div>
+        ) : (
+          queue.slice(0, 20).map(req => (
+            <div
+              key={req.id}
+              className={`viz-request ${req.isContinuation ? 'continuation' : 'new'}`}
+              title={`Request ${req.id} - Session ${req.sessionId}`}
+            >
+              <div className="viz-request-id">{req.id}</div>
+              <div className="viz-request-session">S{req.sessionId}</div>
+            </div>
+          ))
+        )}
+        {queue.length > 20 && (
+          <div className="viz-request" style={{ background: '#374151' }}>
+            +{queue.length - 20}
+          </div>
+        )}
+        </div>
+      )}
+    </div>
+  );
+}

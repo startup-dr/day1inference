@@ -5,8 +5,6 @@ category: guidances
 subcategory: tools
 published: 2024-12-20
 updated: 2025-12-29
-authors:
-  - Day 1 Inference Team
 image: data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E
 toc: false
 ---
@@ -15,10 +13,9 @@ toc: false
 
 This interactive visualizer demonstrates how GPU inference clusters handle concurrent requests in real-time. Explore different scenarios to understand batching strategies, performance characteristics, and resource utilization patterns.
 
-<figure class="fullscreen" class="viz-container">
-  <div id="inference-visualizer-root">
-</figure>
-
+<div id="inference-visualizer-root" style="width: 100%; min-height: 800px; margin: 2rem 0;"></div>
+<link rel="stylesheet" href="inference-visualizer/assets/visualizer.css">
+<script type="module" src="inference-visualizer/assets/visualizer.js"></script>
 
 ## How to Use
 

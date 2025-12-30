@@ -98,12 +98,9 @@ ${bodyHtmlWithIds}
 </d-article>
 
 <d-appendix>
-  <h3>Footnotes</h3>
   <d-footnote-list></d-footnote-list>
-  
-  ${hasBibFile ? `<h3>References</h3>
-  <d-citation-list></d-citation-list>
-  <d-bibliography src="${path.basename(articleDir)}/bibliography.bib"></d-bibliography>` : ''}
+    <d-citation-list></d-citation-list>
+  <d-bibliography src="${path.basename(articleDir)}/bibliography.bib"></d-bibliography>
 </d-appendix>
 
 <script src="/main.bundle.js"></script>
@@ -235,27 +232,49 @@ ${articles.map(a => `
 }
 
 module.exports = {
-    entry: "./src/index.ts",
-    output: {
-        filename: "main.bundle.js",
-        path: path.resolve(__dirname, "dist"),
-    },
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: 'ts-loader',
-                exclude: /node_modules/,
-            },
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
-            },
+  entry: "./src/index.ts",
+  output: {
+    filename: "main.bundle.js",
+    path: path.resolve(__dirname, "dist"),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        use: "ts-loader",
+        exclude: /node_modules/,
+        include: [
+          path.resolve(__dirname, "src"),
+          path.resolve(__dirname, "content/pages"),
         ],
-    },
-    resolve: {
-        extensions: ['.ts', '.js'],
-    },
+      },
+      {
+        test: /\.jsx$/,
+        exclude: /node_modules/,
+        include: [path.resolve(__dirname, "content/pages")],
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: [
+              ["@babel/preset-env", { targets: "defaults" }],
+              ["@babel/preset-react", { runtime: "automatic" }],
+            ],
+          },
+        },
+      },
+      {
+        test: /\.css$/,
+        include: [
+          path.resolve(__dirname, "src"),
+          path.resolve(__dirname, "content/pages"),
+        ],
+        use: ["style-loader", "css-loader"],
+      },
+    ],
+  },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".jsx"],
+  },
     plugins: [
         new CleanWebpackPlugin(),
         new CopyPlugin({
