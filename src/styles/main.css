@@ -2,8 +2,12 @@ html{
   min-width: 1200px;
 }
 
+figcaption {
+  text-align: center;
+}
+
 .teaser {
-  grid-column: text;
+  grid-column: screen;
   width: 100%;
 }
 

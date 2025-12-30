@@ -17,76 +17,16 @@ export function initReconTeaser(): void {
   svg.style.display = 'block';
 
   // R-E-C-O-N order: Routing (largest) on left, Nodes (smallest) on right
-const layers = [
-  {
-    fullName: 'Routing',
-    color: '#d0ea65',
-    cx: 35,        // 35 - 35 = 0
-    cy: 100,
-    rx: 35,
-    ry: 55,
-    keywords: ['Cache-Aware', 'Round Robin', 'Load Balancing', 'Request Scheduling'],
-  },
-  {
-    fullName: 'Engine',
-    color: '#91d67b',
-    cx: 85,
-    cy: 100,
-    rx: 40,
-    ry: 65,
-    keywords: ['Continuous Batching', 'Paged Attention', 'Quantization'],
-  },
-  {
-    fullName: 'Cache',
-    color: '#38ad87',
-    cx: 135,
-    cy: 100,
-    rx: 45,
-    ry: 75,
-    keywords: ['KV Cache', 'Blocks', 'Semantic Cache'],
-  },
-  {
-    fullName: 'Orchestration',
-    color: '#007f80',
-    cx: 185,
-    cy: 100,
-    rx: 50,
-    ry: 85,
-    keywords: ['Autoscaling', 'Health Monitoring', 'Resource Allocation', 'Service Placement'],
-  },
-  {
-    fullName: 'Nodes',
-    color: '#006280',
-    cx: 235,
-    cy: 100,
-    rx: 55,
-    ry: 95,
-    keywords: ['Chip Arch', 'Memory', 'Interconnect', 'Capacity'],
-  },
-].reverse();
-
-
-// viewBox: "0 0 700 200"
-const vbWidth = 700;
-const vbCenterX = vbWidth / 2;
-
-// visual bounds of all ellipses in viewBox units
-const minX = Math.min(...layers.map(l => l.cx - l.rx));
-const maxX = Math.max(...layers.map(l => l.cx + l.rx));
-const groupCenterX = (minX + maxX) / 2;
-
-// shift needed to align centers
-const dx = vbCenterX - groupCenterX;
-
-// apply shift
-for (const l of layers) l.cx += dx;
-
-
-
+  const layers = [
+    { fullName: 'Nodes', color: '#006280', cx: 400, cy: 100, rx: 55, ry: 95 },
+    { fullName: 'Orchestration', color: '#007f80', cx: 340, cy: 100, rx: 50, ry: 85 },
+    { fullName: 'Cache', color: '#38ad87', cx: 280, cy: 100, rx: 45, ry: 75 },
+    { fullName: 'Engine', color: '#91d67b', cx: 220, cy: 100, rx: 40, ry: 65 },
+    { fullName: 'Routing', color: '#d0ea65', cx: 170, cy: 100, rx: 35, ry: 55 },
+  ];
 
   let currentlyClicked: string | null = null;
   let animationInProgress = false;
-  const keywordElements: SVGTextElement[] = [];
 
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
@@ -171,68 +111,7 @@ for (const l of layers) l.cx += dx;
     }
   }
 
-  async function showKeywordCloud(keywords: string[], color: string, ellipseCx: number,  ellipseRx: number) {
-    if (keywords.length === 0) return;
-    
-    const startX = ellipseRx  + 100;
-    let lastEvenX = startX;
-    let lastOddX = startX;
-    
-    for (let i = 0; i < keywords.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-      if (currentlyClicked === null) break;
-      
-      const isEven = i % 2 === 0;
-      const yMin = isEven ? 40 : 150;
-      const yMax = isEven ? 70 : 180;
-      const yPos = Math.random() * (yMax - yMin) + yMin;
-      
-      const fontSize = Math.floor(Math.random() * 18) + 24; // Random 16-20
-      
-      const xPos = isEven ? lastEvenX : lastOddX;
-      
-      const keywordText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      keywordText.setAttribute('x', String(xPos));
-      keywordText.setAttribute('y', String(yPos));
-      keywordText.setAttribute('font-family', 'Arial, sans-serif');
-      keywordText.setAttribute('font-size', String(fontSize));
-      keywordText.setAttribute('font-weight', 'normal');
-      keywordText.setAttribute('fill', color);
-      keywordText.setAttribute('opacity', '0');
-      keywordText.setAttribute('text-anchor', 'start');
-      keywordText.textContent = keywords[i];
-      keywordText.style.pointerEvents = 'none';
-      keywordText.style.transition = 'opacity 0.6s ease-out';
-      
-      svg.appendChild(keywordText);
-      keywordElements.push(keywordText);
-      
-      // Fade in
-      await new Promise(resolve => setTimeout(resolve, 50));
-      keywordText.setAttribute('opacity', '1');
-      
-      // Calculate text width and update position tracker for next word of same parity
-      const bbox = keywordText.getBBox();
-      const wordWidth = bbox.width + 15; // Add some spacing
-      
-      if (isEven) {
-        lastEvenX += wordWidth;
-      } else {
-        lastOddX += wordWidth;
-      }
-    }
-  }
-
-  
-
-  async function resetAnimation() {
-    // Fade out keywords first
-    keywordElements.forEach(el => {
-      el.setAttribute('opacity', '0');
-    });
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
+  function resetAnimation() {
     currentlyClicked = null;
     animationInProgress = false;
     ellipseData.forEach(({ ellipse, originalCx, originalCy }) => {
@@ -243,17 +122,13 @@ for (const l of layers) l.cx += dx;
     });
     textElement.setAttribute('opacity', '0');
     textElement.innerHTML = '';
-    
-    // Clear keyword cloud after fade out
-    keywordElements.forEach(el => el.remove());
-    keywordElements.length = 0;
   }
 
   ellipseData.forEach(({ g, ellipse, layer }) => {
     g.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (currentlyClicked !== null) {
-        await await resetAnimation();
+        resetAnimation();
         return;
       }
       if (animationInProgress) return;
@@ -267,19 +142,13 @@ for (const l of layers) l.cx += dx;
       ellipse.setAttribute('cx', '100');
       ellipse.setAttribute('filter', 'url(#glow)');
       await new Promise(resolve => setTimeout(resolve, 400));
-      if (currentlyClicked !== null) {
-        await typeText(layer.fullName, layer.rx);
-        // Show keyword cloud after text is complete
-        if (currentlyClicked !== null) {
-          await showKeywordCloud(layer.keywords, layer.color, layer.cx, layer.rx);
-        }
-      }
+      if (currentlyClicked !== null) await typeText(layer.fullName, layer.rx);
       animationInProgress = false;
     });
   });
 
-  svg.addEventListener('click', async () => {
-    if (currentlyClicked !== null) await await resetAnimation();
+  svg.addEventListener('click', () => {
+    if (currentlyClicked !== null) resetAnimation();
   });
 
   container.appendChild(svg);
