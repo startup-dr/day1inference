@@ -50,6 +50,7 @@ const transformMarkdownWithFigures = (data, filepath) => {
     const authors = parsed.data.authors || [];
     const reviewers = parsed.data.reviewers || [];
     const subtitle = parsed.data.subtitle || '';
+    const teaser = parsed.data.teaser || '';
     const pubDate = parsed.data.date ? new Date(parsed.data.date).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -90,6 +91,7 @@ const transformMarkdownWithFigures = (data, filepath) => {
 <d-title>
     <h1>${parsed.data.title || ''}</h1>
     ${subtitle ? `<p>${subtitle}</p>` : ''}
+    ${teaser ? `\n\n${teaser}` : ''}
 </d-title>
 <d-byline></d-byline>
 
@@ -150,6 +152,30 @@ const generateIndex = () => {
                 ? path.dirname(relativePath)
                 : relativePath.replace('.md', '');
             
+            // Resolve relative image paths
+            let imagePath = parsed.data.image || '';
+            if (imagePath && imagePath.startsWith('./')) {
+                // Convert ./assets/image.svg to article-name/assets/image.svg
+                const articleDir = path.dirname(relativePath);
+                const isArticleMd = relativePath.endsWith('/article.md');
+                
+                if (isArticleMd) {
+                    // For article.md files, the article directory is the parent
+                    // Example: recon-article/article.md -> recon-article/
+                    const imageRelative = imagePath.replace('./', '');
+                    imagePath = '/' + articleDir + '/' + imageRelative;
+                } else {
+                    // For standalone .md files, use the file's directory
+                    // Example: simple-article.md -> simple-article/ (if assets exist)
+                    const baseDir = path.dirname(relativePath);
+                    const imageRelative = imagePath.replace('./', '');
+                    imagePath = '/' + path.join(baseDir, imageRelative).replace(/\\/g, '/');
+                }
+                
+                // Normalize path separators for web
+                imagePath = imagePath.replace(/\\/g, '/');
+            }
+            
             articles.push({
                 title: parsed.data.title,
                 description: parsed.data.description || '',
@@ -157,7 +183,7 @@ const generateIndex = () => {
                 date: published,
                 displayDate: formattedDate,
                 url: urlPath + '.html',
-                image: parsed.data.image || ''
+                image: imagePath
             });
         }
     });
@@ -208,12 +234,12 @@ class GenerateIndexPlugin {
 <d-article>
 ${articles.map(a => `
     <div class="article-card">
-        ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image" />` : ''}
         <div class="article-content">
             <div class="article-meta">${a.category} • ${a.displayDate}</div>
             <h3><a href="${a.url}">${a.title}</a></h3>
             <p>${a.description}</p>
         </div>
+        ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image" />` : ''}
     </div>
 `).join('')}
 </d-article>
@@ -275,6 +301,7 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
   },
+
     plugins: [
         new CleanWebpackPlugin(),
         new CopyPlugin({

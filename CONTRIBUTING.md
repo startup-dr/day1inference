@@ -90,6 +90,25 @@ Content goes here...
 - `subtitle`: Shown under title
 - `toc`: Set to `true` to generate table of contents from h2/h3 headings
 - `image`: Thumbnail for homepage timeline
+  - **Container size: 200px × 120px** (displayed with `object-fit: contain`)
+  - Your image will scale proportionally to fit within the container
+  - Any aspect ratio works - no cropping will occur
+  - Can be a relative path: `./assets/thumbnail.svg`
+  - Or an absolute URL: `https://example.com/image.png`
+  - Or a data URI: `data:image/svg+xml,...`
+- `teaser`: Interactive figure shown in `<d-title>` after subtitle (uses YAML multiline `|`)
+  - Perfect for interactive visualizations that introduce the article
+  - Should be a `<figure class="teaser">` with a container div and caption
+  - Example:
+    ```yaml
+    teaser: |
+      <figure class="teaser">
+        <div id="my-viz"></div>
+        <figcaption>
+          Hover to interact with the visualization.
+        </figcaption>
+      </figure>
+    ```
 
 ### 3. Write Content in Markdown
 

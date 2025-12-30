@@ -70,6 +70,7 @@ d-article h6 {
     object-fit: contain;
     border-radius: 8px;
     flex-shrink: 0;
+    background: #f5f5f5;
 }
 
 .article-content {

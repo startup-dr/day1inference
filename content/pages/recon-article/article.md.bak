@@ -8,13 +8,6 @@ authors:
 toc: true
 image: ./assets/thumbnail.svg
 description: Understanding the five layers of modern inference architecture
-teaser: |
-  <figure class="teaser">
-    <div id="recon-stack-teaser"></div>
-    <figcaption>
-      Hover over each layer to explore the RECON stack architecture for LLM inference.
-    </figcaption>
-  </figure>
 acknowledgments: |
   We are deeply grateful to Andy Coenen, Brian Lee...
   
@@ -27,6 +20,13 @@ discussion_and_review: |
 
 
 ---
+
+<figure class="teaser">
+  <div id="recon-stack-teaser"></div>
+  <figcaption>
+    Hover over each layer to explore the RECON stack architecture for LLM inference.
+  </figcaption>
+</figure>
 
 When you send a prompt to a model like Anthropic's Claude, you join hundreds of millions of other users generating billions of requests per day.<d-cite key="chatgpt_stats"></d-cite> Each request routes through models requiring 4 to 8 high-end GPUs<d-cite key="llama_gpu_requirements"></d-cite> (at roughly $30,000 each)<d-cite key="h100_pricing"></d-cite> just to hold the model weights and cache in memory. Traffic patterns swing wildly across timezones and use cases. Peak hours might see 10x the load of quiet periods, yet users expect sub-second response times regardless.
 
