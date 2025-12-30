@@ -1,0 +1,379 @@
+# Contributing to Day1Inference
+
+Welcome to Day1Inference! This guide will help you contribute high-quality, inference-focused content to our educational platform. We're building a community-driven resource that prioritizes technical depth, transparency, and real-world applicability in machine learning inference optimization.
+
+## Our Tenets
+
+Day1Inference operates under five core principles that guide all content decisions:
+
+### 1. Inference-First
+All guidance prioritizes inference optimization requirements over AWS service boundaries. We recommend the optimal solution for each use case—whether open source, EKS, SageMaker, Bedrock, or emerging managed offerings—based on workload characteristics, not service allegiance.
+
+### 2. Deeply Technical
+Content addresses production-grade inference challenges with specificity. We provide actionable guidance on continuous batching strategies, quantization trade-offs, multi-model serving architectures, and kernel-level optimizations—not surface-level overviews.
+
+### 3. Transparency Earns Trust
+We publish performance benchmarks, expose optimization decisions, and provide visibility into inference stack implementations. Customers can validate our recommendations and understand the trade-offs in their specific context.
+
+### 4. Field-Validated
+Guidance emerges from real customer implementations, not theoretical best practices. Customer engagements validate approaches in production scenarios and feed learnings back into the platform.
+
+### 5. Industry Relevant
+Inference is a rapidly emerging industry. We commit to keeping content current with the latest inference stack trends, open-source tooling, and optimization techniques. We continuously monitor specialized inference providers and incorporate new approaches as they prove valuable.
+
+## Content Types
+
+Day1Inference supports two types of content:
+
+### Static Educational Articles
+Traditional blog-style articles using the Distill template for rich, academic-quality presentation. These are perfect for:
+- Deep-dive technical explanations
+- Case studies and field reports
+- Benchmarking results and analysis
+- Tutorial content with step-by-step guidance
+
+### Interactive Visualizations
+React-based interactive tools that help users understand complex inference concepts through hands-on exploration. These are ideal for:
+- Performance trade-off explorers
+- Architecture comparison tools
+- Cost calculators
+- Configuration generators
+
+## Creating Static Articles
+
+### 1. Article Structure
+Create a new HTML file in `content/pages/your-article-name.html` following this template:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://distill.pub/template.v2.js"></script>
+  <link rel="stylesheet" href="/src/styles/navigation.css">
+  <title>Your Article Title</title>
+</head>
+<body>
+  <!-- Global navigation (same for all pages) -->
+  <nav class="site-nav">
+    <a href="/" class="nav-logo">
+      <img src="/public/aws-logo.svg" alt="AWS">
+      <span>Day1Inference</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Timeline</a>
+      <a href="/inference-visualizer">Visualizer</a>
+    </div>
+  </nav>
+
+  <d-front-matter>
+    <script type="text/json">
+    {
+      "title": "Your Article Title",
+      "description": "Brief description for SEO and timeline",
+      "authors": [
+        {"author": "Your Name", "authorURL": "https://your-profile.com/"}
+      ],
+      "katex": {
+        "delimiters": [
+          {"left": "$", "right": "$", "display": false},
+          {"left": "$$", "right": "$$", "display": true}
+        ]
+      }
+    }
+    </script>
+  </d-front-matter>
+
+  <d-title>
+    <h1>Your Article Title</h1>
+    <p>Compelling subtitle that captures the inference optimization focus</p>
+  </d-title>
+
+  <d-article>
+    <!-- Your content here -->
+    
+    <h2>Introduction</h2>
+    <p>Start with the inference challenge you're addressing...</p>
+
+    <h2>Technical Deep Dive</h2>
+    <p>Provide specific, actionable guidance...</p>
+
+    <d-figure id="performance-comparison">
+      <img src="/content/images/your-benchmark-chart.png" alt="Performance comparison">
+      <figcaption>
+        Performance comparison across different serving configurations.
+        <strong>Always cite your data sources and methodology.</strong>
+      </figcaption>
+    </d-figure>
+
+    <h2>Field Validation</h2>
+    <p>Share real-world implementation results...</p>
+
+    <h2>Conclusion</h2>
+    <p>Summarize key takeaways and next steps...</p>
+  </d-article>
+
+  <d-appendix>
+    <h3>References</h3>
+    <d-bibliography src="references.bib"></d-bibliography>
+    
+    <h3>Acknowledgments</h3>
+    <p>Credit collaborators, data sources, and validation partners.</p>
+  </d-appendix>
+</body>
+</html>
+```
+
+### 2. Visual Best Practices
+
+For creating effective visual content, follow the principles outlined in [Communicating with Interactive Articles](https://distill.pub/2020/communicating-with-interactive-articles/). Key guidelines:
+
+- **Show, don't just tell**: Use visualizations to make abstract concepts concrete
+- **Progressive disclosure**: Start simple, then add complexity as readers engage
+- **Multiple perspectives**: Show the same data from different angles
+- **Interactive exploration**: Let readers manipulate parameters to understand relationships
+
+### 3. Citations and Sources
+
+**We strongly encourage extensive citation.** Every performance claim, benchmark result, and optimization recommendation should be backed by credible sources:
+
+```html
+<!-- Inline citations -->
+<p>Recent studies show that continuous batching can improve throughput by 2-10x<d-cite key="continuous-batching-study"></d-cite>.</p>
+
+<!-- Reference list in appendix -->
+<d-appendix>
+  <d-bibliography src="references.bib"></d-bibliography>
+</d-appendix>
+```
+
+Create a `references.bib` file alongside your article:
+
+```bibtex
+@article{continuous-batching-study,
+  title={Continuous Batching for Deep Learning Inference},
+  author={Author Name},
+  journal={Conference/Journal},
+  year={2024},
+  url={https://paper-url.com}
+}
+```
+
+**Required citations include:**
+- Performance benchmarks and their methodologies
+- Open source tools and frameworks
+- Academic papers for theoretical foundations
+- Customer case studies (with permission)
+- Industry reports and surveys
+
+## Creating Interactive Visualizations
+
+### 1. Visualization Structure
+Create a new directory in `content/pages/your-viz-name/` with this structure:
+
+```
+your-viz-name/
+├── index.html              # Entry point
+├── src/
+│   ├── App.jsx             # Root React component
+│   ├── components/         # React components
+│   │   ├── ConfigPanel.jsx
+│   │   ├── ResultsView.jsx
+│   │   └── PerformanceChart.jsx
+│   └── styles.css          # Visualization-specific styles
+└── visualizations/
+    └── visualization.ts    # Mount logic
+```
+
+### 2. Entry Point Template
+`index.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Visualization Title</title>
+  <link rel="stylesheet" href="/src/styles/navigation.css">
+</head>
+<body>
+  <!-- Same navigation as static pages -->
+  <nav class="site-nav">
+    <a href="/" class="nav-logo">
+      <img src="/public/aws-logo.svg" alt="AWS">
+      <span>Day1Inference</span>
+    </a>
+    <div class="nav-links">
+      <a href="/">Timeline</a>
+      <a href="/inference-visualizer">Visualizer</a>
+    </div>
+  </nav>
+
+  <div id="your-viz-root"></div>
+  
+  <script type="module">
+    import { initYourVisualization } from './visualizations/visualization.ts';
+    initYourVisualization();
+  </script>
+</body>
+</html>
+```
+
+### 3. React Component Example
+`src/App.jsx`:
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import ConfigPanel from './components/ConfigPanel';
+import ResultsView from './components/ResultsView';
+import './styles.css';
+
+function App() {
+  const [config, setConfig] = useState({
+    batchSize: 1,
+    modelSize: '7B',
+    hardware: 'A100'
+  });
+  
+  const [results, setResults] = useState(null);
+
+  useEffect(() => {
+    // Calculate performance metrics based on config
+    // This should use real data and validated models
+    calculatePerformance(config).then(setResults);
+  }, [config]);
+
+  return (
+    <div className="inference-explorer">
+      <header>
+        <h1>Inference Performance Explorer</h1>
+        <p>Explore the trade-offs between different inference configurations</p>
+      </header>
+      
+      <div className="explorer-content">
+        <ConfigPanel config={config} onChange={setConfig} />
+        <ResultsView results={results} />
+      </div>
+      
+      <footer>
+        <p>Data sources: <a href="#citations">See citations</a></p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 4. Mount Logic
+`visualizations/visualization.ts`:
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from '../src/App.jsx';
+
+export function initYourVisualization() {
+  const container = document.getElementById('your-viz-root');
+  if (!container) {
+    console.error('Visualization root not found');
+    return;
+  }
+
+  // Prevent double mounting
+  if (container.dataset.vizMounted === 'true') {
+    return;
+  }
+  container.dataset.vizMounted = 'true';
+
+  const root = ReactDOM.createRoot(container);
+  root.render(React.createElement(App));
+}
+```
+
+## Adding Your Content to the Site
+
+### 1. Update Vite Configuration
+Add your new page to `vite.config.ts`:
+
+```typescript
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        timeline: 'content/pages/timeline.html',
+        visualizer: 'content/pages/inference-visualizer/index.html',
+        yourArticle: 'content/pages/your-article-name.html',        // Static article
+        yourViz: 'content/pages/your-viz-name/index.html'          // Interactive viz
+      }
+    }
+  }
+});
+```
+
+### 2. Update Navigation
+Add your content to the navigation in all existing pages and create appropriate links from the timeline.
+
+### 3. Add to Timeline
+Update `content/pages/timeline.html` to include your contribution in the chronological feed.
+
+## Content Quality Standards
+
+### Technical Rigor
+- **Provide specific metrics**: Include actual numbers, not vague improvements
+- **Show methodology**: Explain how benchmarks were conducted
+- **Include error bars**: Show confidence intervals and statistical significance
+- **Validate claims**: Every optimization claim should be reproducible
+
+### Transparency Requirements
+- **Open source benchmarks**: Provide code and data when possible
+- **Environment specifications**: Document exact hardware, software, and configuration
+- **Limitations**: Clearly state when results may not generalize
+- **Conflicts of interest**: Disclose any potential biases
+
+### Field Validation
+- **Customer stories**: Include real implementation experiences (with permission)
+- **Production constraints**: Address scalability, reliability, and operational concerns
+- **Cost analysis**: Provide realistic cost implications
+- **Migration paths**: Show how to adopt recommendations in existing systems
+
+## Example Article
+
+For a complete example of how to structure articles with effective visualizations, see our [Inference Optimization Deep Dive](content/pages/inference-optimization-deep-dive.html), which demonstrates:
+
+- Rich visual explanations of complex concepts
+- Interactive parameter exploration
+- Comprehensive benchmark results with full methodology
+- Real customer implementation case studies
+- Extensive citations and references
+
+## Submission Process
+
+1. **Fork** the repository
+2. **Create** your content following the guidelines above
+3. **Test** locally using `npm run dev`
+4. **Validate** all citations and data sources
+5. **Submit** a pull request with:
+   - Clear description of your contribution
+   - Evidence of field validation (where applicable)
+   - List of all data sources and methodologies
+   - Screenshots of key visualizations
+
+## Getting Help
+
+- **Technical questions**: Open an issue with the "question" label
+- **Content review**: Request review from domain experts before submission
+- **Visualization help**: See existing interactive examples in the codebase
+- **Citation format**: Follow academic standards or reach out for guidance
+
+## Community Standards
+
+We're building a resource that serves the entire inference optimization community. All contributions should:
+
+- **Prioritize reader value** over promotional content
+- **Maintain objectivity** while acknowledging real-world constraints
+- **Credit collaborators** and data sources appropriately
+- **Update content** as the field evolves
+
+Thank you for contributing to Day1Inference! Together, we're creating the definitive resource for production machine learning inference optimization.

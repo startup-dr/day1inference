@@ -21,8 +21,6 @@ discussion_and_review: |
 
 ---
 
-{{{fragment-inference-performance}}}
-
 When you send a prompt to a model like Anthropic's Claude, you join hundreds of millions of other users generating billions of requests per day.<d-cite key="chatgpt_stats"></d-cite> Each request routes through models requiring 4 to 8 high-end GPUs<d-cite key="llama_gpu_requirements"></d-cite> (at roughly $30,000 each)<d-cite key="h100_pricing"></d-cite> just to hold the model weights and cache in memory. Traffic patterns swing wildly across timezones and use cases. Peak hours might see 10x the load of quiet periods, yet users expect sub-second response times regardless.
 
 This represents a fundamentally new challenge in computing. For the past two decades, infrastructure teams could choose between two well-understood paradigms depending on their workload. LLM inference fits cleanly into neither. Instead, it demands a hybrid approach that borrows lessons from both worlds while introducing entirely new constraints.
