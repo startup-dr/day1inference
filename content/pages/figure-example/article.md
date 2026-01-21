@@ -1,7 +1,7 @@
 ---
 title: Figure and Caption System Example
 subtitle: Demonstrating Distill-style figures with TypeScript visualizations
-category: foundations
+category: draft
 published: 2025-12-29
 authors:
   - Day 1 Inference Team
