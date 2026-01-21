@@ -1,0 +1,118 @@
+/* Search Component Styles */
+
+.search-container {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: #38ad87;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-category {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.search-result-title {
+    font-weight: 600;
+    color: #232F3E;
+    margin-bottom: 0.25rem;
+}
+
+.search-result-description {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.search-result-context {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.search-result-context mark {
+    background: #d0ea65;
+    color: #232F3E;
+    font-weight: 600;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+    font-style: normal;
+}
+
+.search-result-item.no-results {
+    color: #888;
+    text-align: center;
+    font-style: italic;
+}
+
+.search-result-item.search-more {
+    color: #666;
+    text-align: center;
+    font-size: 0.9rem;
+    background-color: #f8f9fa;
+}
+
+.search-result-item.search-more a {
+    color: #007f80;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.search-result-item.search-more a:hover {
+    text-decoration: underline;
+}
