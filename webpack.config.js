@@ -507,6 +507,103 @@ class GenerateIndexPlugin {
         gap: 1.5rem;
     }
 }
+
+.search-container {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: #38ad87;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: background-color 0.2s;
+}
+
+.search-result-item:hover {
+    background-color: #f8f9fa;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-category {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.search-result-title {
+    font-weight: 600;
+    color: #232F3E;
+    margin-bottom: 0.25rem;
+}
+
+.search-result-description {
+    font-size: 0.9rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+.search-result-item.no-results {
+    color: #888;
+    text-align: center;
+    font-style: italic;
+}
+
+.search-result-item.search-more {
+    color: #666;
+    text-align: center;
+    font-size: 0.9rem;
+    background-color: #f8f9fa;
+}
+
+.search-result-item.search-more a {
+    color: #007f80;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.search-result-item.search-more a:hover {
+    text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -571,14 +668,88 @@ class GenerateIndexPlugin {
         </div>
     </div>
 
-    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; text-align: center;">
-        <p style="color: #666; font-size: 0.95rem;">
-            Not sure where to start? <a href="/timeline.html" style="color: #007f80; text-decoration: none;">Browse all content</a> 
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h3 style="color: #232F3E; font-size: 1.3rem; margin-bottom: 1rem;">Know what you're looking for? Search here</h3>
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="site-search" 
+                    placeholder="Search articles by title or content..."
+                    class="search-input"
+                />
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </div>
+        <div style="text-align: center; color: #666; font-size: 0.95rem;">
+            Or <a href="/timeline.html" style="color: #007f80; text-decoration: none;">browse all content</a> 
             or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON stack</a>.
-        </p>
+        </div>
     </div>
 </div>
 
+<script>
+// Article search index
+const articleIndex = ${JSON.stringify(articles.map(a => ({
+    title: a.title,
+    description: a.description,
+    category: a.category,
+    url: a.url
+})))};
+
+const searchInput = document.getElementById('site-search');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    
+    if (query.length < 2) {
+        searchResults.innerHTML = '';
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    const results = articleIndex.filter(article => {
+        return article.title.toLowerCase().includes(query) ||
+               article.description.toLowerCase().includes(query) ||
+               article.category.toLowerCase().includes(query);
+    });
+    
+    if (results.length === 0) {
+        searchResults.innerHTML = '<div class="search-result-item no-results">No articles found matching "' + query + '"</div>';
+        searchResults.style.display = 'block';
+        return;
+    }
+    
+    searchResults.innerHTML = results.slice(0, 5).map(article => \`
+        <a href="\${article.url}" class="search-result-item">
+            <div class="search-result-category">\${article.category}</div>
+            <div class="search-result-title">\${article.title}</div>
+            <div class="search-result-description">\${article.description}</div>
+        </a>
+    \`).join('');
+    
+    if (results.length > 5) {
+        searchResults.innerHTML += '<div class="search-result-item search-more">+ ' + (results.length - 5) + ' more results. <a href="/timeline.html">View all content</a></div>';
+    }
+    
+    searchResults.style.display = 'block';
+});
+
+// Close search results when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-container')) {
+        searchResults.style.display = 'none';
+    }
+});
+
+// Reopen results when clicking back in search
+searchInput.addEventListener('focus', () => {
+    if (searchInput.value.trim().length >= 2 && searchResults.innerHTML) {
+        searchResults.style.display = 'block';
+    }
+});
+</script>
 <script src="/main.bundle.js"></script>
 </body>`;
             
