@@ -668,7 +668,7 @@ class GenerateIndexPlugin {
         </div>
     </div>
 
-    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0;">
+    <div style="margin-top: 4rem;">
         <div style="text-align: center; margin-bottom: 2rem;">
             <h3 style="color: #232F3E; font-size: 1.3rem; margin-bottom: 1rem;">Know what you're looking for? Search here</h3>
             <div class="search-container">
@@ -687,6 +687,13 @@ class GenerateIndexPlugin {
         </div>
     </div>
 </div>
+
+<footer style="background: #232F3E; color: #999; padding: 2rem; text-align: center; margin-top: 4rem;">
+    <p style="margin: 0; font-size: 0.9rem;">
+        Copyright © 2022, <a href="https://aws.amazon.com" target="_blank" rel="noopener" style="color: #999; text-decoration: none;">Amazon Web Services, Inc.</a> 
+        (<a href="https://aws.amazon.com/terms/?nc1=f_pr" target="_blank" rel="noopener" style="color: #999; text-decoration: none;">Terms & Conditions</a>)
+    </p>
+</footer>
 
 <script>
 // Article search index
