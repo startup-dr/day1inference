@@ -49,7 +49,7 @@ d-article h6 {
 }
 
 .nav-links a:hover {
-    color: #FF9900;
+    color: #d0ea65;
 }
 
 /* Article Cards (for timeline) */
@@ -70,7 +70,6 @@ d-article h6 {
     object-fit: contain;
     border-radius: 8px;
     flex-shrink: 0;
-    background: #f5f5f5;
 }
 
 .article-content {
@@ -96,7 +95,7 @@ d-article h6 {
 }
 
 .article-card h3 a:hover {
-    color: #667eea;
+    color: #007f80;
 }
 
 .article-card p {
