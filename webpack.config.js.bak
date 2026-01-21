@@ -428,7 +428,7 @@ const generateIndex = () => {
                 displayDate: formattedDate,
                 url: urlPath + '.html',
                 image: imagePath,
-                content: plainText.substring(0, 5000) // Limit content to 5000 chars for search index
+                content: plainText.substring(0, 15000) // Limit content to 15000 chars for search index
             });
         }
     });
@@ -592,6 +592,26 @@ class GenerateIndexPlugin {
     font-size: 0.9rem;
     color: #666;
     line-height: 1.4;
+}
+
+.search-result-context {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.search-result-context mark {
+    background: #d0ea65;
+    color: #232F3E;
+    font-weight: 600;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+    font-style: normal;
 }
 
 .search-result-item.no-results {

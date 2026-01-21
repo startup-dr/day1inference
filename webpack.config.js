@@ -428,7 +428,7 @@ const generateIndex = () => {
                 displayDate: formattedDate,
                 url: urlPath + '.html',
                 image: imagePath,
-                content: plainText.substring(0, 5000) // Limit content to 5000 chars for search index
+                content: plainText // Full content for search index
             });
         }
     });

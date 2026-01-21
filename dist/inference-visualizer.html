@@ -1,0 +1,123 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://distill.pub/template.v2.js"></script>
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+</head>
+<body>
+
+<d-front-matter>
+<script type="text/json">{
+  "title": "GPU Inference Cluster Visualizer",
+  "description": "Interactive simulation of GPU inference clusters with real-time request handling, batching, and performance metrics",
+  
+  "authors": [{"author": "Day 1 Inference Team"}]
+}</script>
+</d-front-matter>
+
+<nav class="site-nav">
+    <a href="/" class="nav-logo">
+        <img src="/logo.svg" alt="Day 1 Inference" />
+        Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
+    </a>
+    <div class="nav-links">
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
+    </div>
+</nav>
+
+<d-title>
+    <h1>GPU Inference Cluster Visualizer</h1>
+    
+    
+</d-title>
+<d-byline></d-byline>
+
+<d-article>
+<h2 id="gpu-inference-cluster-visualizer">GPU Inference Cluster Visualizer</h2>
+<p>This interactive visualizer demonstrates how GPU inference clusters handle concurrent requests in real-time. Explore different scenarios to understand batching strategies, performance characteristics, and resource utilization patterns.</p>
+<figure class="fullscreen" class="viz-container">
+  <div id="inference-visualizer-root">
+</figure>
+<h2 id="how-to-use">How to Use</h2>
+<p><strong>Choose a Scenario:</strong></p>
+<ul>
+<li><strong>Steady Load</strong>: Constant request rate for baseline performance analysis</li>
+<li><strong>Spike Load</strong>: Sudden burst of requests to test capacity</li>
+<li><strong>Mixed Workload</strong>: Variable token lengths simulating real-world traffic</li>
+<li><strong>Custom</strong>: Configure your own parameters</li>
+</ul>
+<p><strong>Key Metrics:</strong></p>
+<ul>
+<li><strong>Throughput</strong>: Requests processed per second</li>
+<li><strong>Queue Length</strong>: Pending requests waiting for GPU time</li>
+<li><strong>GPU Utilization</strong>: How efficiently the cluster uses available compute</li>
+<li><strong>Latency</strong>: Time from request arrival to completion (P50/P95/P99)</li>
+</ul>
+<p><strong>Understanding the Visualization:</strong></p>
+<ul>
+<li><strong>GPU Grid</strong>: Each cell represents a GPU instance (gray = idle, blue = processing)</li>
+<li><strong>Request Queue</strong>: Visualizes pending requests color-coded by age</li>
+<li><strong>Metrics Charts</strong>: Real-time performance data over the simulation timeline</li>
+</ul>
+<h2 id="key-concepts">Key Concepts</h2>
+<h3 id="batching">Batching</h3>
+<p>GPUs process requests in batches for efficiency. The visualizer shows how:</p>
+<ul>
+<li>Requests are grouped together when possible</li>
+<li>Larger batches improve throughput but may increase latency</li>
+<li>Batch size affects GPU utilization</li>
+</ul>
+<h3 id="load-patterns">Load Patterns</h3>
+<p>Different traffic patterns stress the system differently:</p>
+<ul>
+<li><strong>Steady</strong>: Predictable load, easier to optimize</li>
+<li><strong>Bursty</strong>: Requires queue management and capacity planning</li>
+<li><strong>Mixed</strong>: Realistic workloads with varying request sizes</li>
+</ul>
+<h3 id="performance-trade-offs">Performance Trade-offs</h3>
+<p>Watch how changing parameters affects:</p>
+<ul>
+<li>Throughput vs. latency trade-offs</li>
+<li>Queue buildup during peak load</li>
+<li>Recovery time after load spikes</li>
+<li>Impact of token length variance</li>
+</ul>
+<h2 id="configuration-options">Configuration Options</h2>
+<p><strong>Request Rate</strong>: Control how many requests arrive per second</p>
+<p><strong>GPUs</strong>: Scale the cluster size to see capacity impact</p>
+<p><strong>Batch Size</strong>: Affects how many requests process together</p>
+<p><strong>Processing Time</strong>: Base time per token (varies by model/hardware)</p>
+<p><strong>Token Distribution</strong>: Single value or range for realistic variance</p>
+<h2 id="real-world-applications">Real-World Applications</h2>
+<p>This simulation helps understand:</p>
+<ul>
+<li><strong>Capacity Planning</strong>: How many GPUs needed for expected load</li>
+<li><strong>Auto-scaling</strong>: When to add/remove instances</li>
+<li><strong>SLA Management</strong>: Meeting latency requirements under load</li>
+<li><strong>Cost Optimization</strong>: Balancing performance vs. infrastructure cost</li>
+</ul>
+<h2 id="technical-implementation">Technical Implementation</h2>
+<p>Built with React and Recharts, this visualizer uses:</p>
+<ul>
+<li>Event-driven simulation engine</li>
+<li>Real-time batching algorithms</li>
+<li>Statistical latency tracking</li>
+<li>Responsive data visualization</li>
+</ul>
+<p>View the simulation running at different speeds to analyze behavior over extended periods. The &quot;Speed&quot; control lets you compress hours of operation into minutes.</p>
+
+</d-article>
+
+<d-appendix>
+  <d-footnote-list></d-footnote-list>
+    <d-citation-list></d-citation-list>
+  <d-bibliography src="inference-visualizer/bibliography.bib"></d-bibliography>
+</d-appendix>
+
+<script src="/main.bundle.js"></script>
+</body>

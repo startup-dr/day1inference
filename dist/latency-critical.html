@@ -1,0 +1,259 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://distill.pub/template.v2.js"></script>
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+<style>
+.section-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.journey-content-card {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.journey-content-card:not([style*="cursor: not-allowed"]):hover {
+    border-color: #38ad87;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 173, 135, 0.3);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.card-type {
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coming-soon-badge {
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.external-badge {
+    color: #666;
+    font-size: 1.25rem;
+}
+
+.journey-content-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: #232F3E;
+}
+
+.journey-content-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.journey-section {
+    margin: 3rem 0;
+}
+
+.section-title {
+    font-size: 1.75rem;
+    color: #232F3E;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.section-description {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .section-cards {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<d-front-matter>
+<script type="text/json">{
+  "title": "Latency Critical Inference",
+  "description": "Master the techniques and architecture decisions needed to achieve sub-second latency for LLM inference"
+}</script>
+</d-front-matter>
+
+<nav class="site-nav">
+    <a href="/" class="nav-logo">
+        <img src="/logo.svg" alt="Day 1 Inference" />
+        Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
+    </a>
+    <div class="nav-links">
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
+    </div>
+</nav>
+
+<div style="text-align: center; padding: 3rem 2rem 1rem;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #232F3E;">Latency Critical Inference</h1>
+    <p style="font-size: 1.1rem; color: #666; max-width: 800px; margin: 0 auto;">Optimize for minimal response time and understand the performance characteristics of your inference stack</p>
+</div>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem;">
+    
+        <div class="journey-section">
+            <h2 class="section-title">Getting Started</h2>
+            <p class="section-description">Start here to understand the fundamentals of the RECON stack and how it enables low-latency inference.</p>
+            <div class="section-cards">
+                
+        <a class="journey-content-card" href="/recon-article.html"  style="">
+            <div class="card-header">
+                <span class="card-type" style="background: #007f80;">Overview</span>
+                
+                
+            </div>
+            <h3>The RECON Stack for LLM Inference</h3>
+            <p>Understanding the five layers of modern inference architecture</p>
+        </a>
+        
+            </div>
+        </div>
+    
+        <div class="journey-section">
+            <h2 class="section-title">Deep Dives</h2>
+            <p class="section-description">Explore each layer of the RECON stack to understand how to optimize every component for minimal latency.</p>
+            <div class="section-cards">
+                
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #006280;">Deep Dive</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Routing Layer</h3>
+            <p>Load balancing strategies for inference workloads</p>
+        </div>
+        
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #006280;">Deep Dive</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Engine Layer</h3>
+            <p>vLLM, TensorRT-LLM, and inference runtime optimizations</p>
+        </div>
+        
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #006280;">Deep Dive</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Caching Systems</h3>
+            <p>KV cache, prefix caching, and memory optimization strategies</p>
+        </div>
+        
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #006280;">Deep Dive</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Orchestration Layer</h3>
+            <p>Service deployment, autoscaling, and infrastructure management</p>
+        </div>
+        
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #006280;">Deep Dive</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Nodes Layer</h3>
+            <p>GPU architectures, memory hierarchies, and capacity planning</p>
+        </div>
+        
+            </div>
+        </div>
+    
+        <div class="journey-section">
+            <h2 class="section-title">Solutions</h2>
+            <p class="section-description">Deploy production-ready infrastructure with these reference architectures and templates.</p>
+            <div class="section-cards">
+                
+        <a class="journey-content-card" href="https://awslabs.github.io/ai-on-eks/docs/infra/inference-ready-cluster" target="_blank" rel="noopener" style="">
+            <div class="card-header">
+                <span class="card-type" style="background: #38ad87;">Solution</span>
+                
+                <span class="external-badge">↗</span>
+            </div>
+            <h3>AI on EKS: Inference-Ready Cluster</h3>
+            <p>AWS Labs reference architecture for deploying inference workloads on EKS</p>
+        </a>
+        
+        <div class="journey-content-card"   style="opacity: 0.5; cursor: not-allowed;">
+            <div class="card-header">
+                <span class="card-type" style="background: #38ad87;">Solution</span>
+                <span class="coming-soon-badge">Coming Soon</span>
+                
+            </div>
+            <h3>Low-Latency Deployment Stack</h3>
+            <p>CDK template for optimized single-region inference</p>
+        </div>
+        
+            </div>
+        </div>
+    
+        <div class="journey-section">
+            <h2 class="section-title">Tools</h2>
+            <p class="section-description">Interactive tools to simulate, calculate, and visualize inference performance.</p>
+            <div class="section-cards">
+                
+        <a class="journey-content-card" href="/inference-visualizer.html"  style="">
+            <div class="card-header">
+                <span class="card-type" style="background: #f59e0b;">Tool</span>
+                
+                
+            </div>
+            <h3>GPU Inference Cluster Visualizer</h3>
+            <p>Interactive simulation of GPU inference clusters with real-time request handling, batching, and performance metrics</p>
+        </a>
+        
+            </div>
+        </div>
+    
+    
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; text-align: center;">
+        <p style="color: #666;">
+            <a href="/" style="color: #007f80; text-decoration: none;">← Back to all journeys</a>
+        </p>
+    </div>
+</div>
+
+<script src="/main.bundle.js"></script>
+</body>
