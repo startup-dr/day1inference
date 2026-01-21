@@ -2,6 +2,18 @@
 
 Welcome! This guide shows you how to contribute inference-focused content to Day1Inference. Each article lives in its own folder with markdown, assets, and optional TypeScript visualizations.
 
+**Table of Contents:**
+- [Our Tenets](#our-tenets)
+- [Content Structure](#content-structure)
+- [Creating an Article](#creating-an-article)
+- [Adding Interactive Visualizations](#adding-interactive-visualizations)
+- [React Interactive Tools](#react-interactive-tools)
+- [Content Quality Standards](#content-quality-standards)
+- [Testing Your Content](#testing-your-content)
+- [Submission & Review Process](#submission--review-process)
+- [Review Guidelines for Reviewers](#review-guidelines-for-reviewers)
+- [Getting Help](#getting-help)
+
 ## Our Tenets
 
 All content follows these five principles:
@@ -486,22 +498,186 @@ The homepage (`/` or `/index.html`) should list your article in the timeline if 
 - Real-time visualization
 - Complex state management
 
-## Submission Process
+## Submission & Review Process
 
-1. **Fork** the repository
-2. **Create** your article folder in `content/pages/`
-3. **Write** `article.md` with proper front matter
-4. **Add** assets to `assets/` folder
-5. **Add** citations to `bibliography.bib` (if needed)
-6. **Create** visualizations in `visualizations/` (if needed)
-7. **Test** locally with `npm run dev`
-8. **Build** with `npm run build` to verify
-9. **Commit** your changes
-10. **Submit** a pull request with:
-    - Clear description of your contribution
-    - Evidence of field validation (where applicable)
-    - List of all data sources and methodologies
-    - Screenshots of key visualizations
+Day1Inference uses a peer review process inspired by [Distill's review process](https://distill.pub/journal/). All articles require **2 approving reviews** before publication.
+
+### For Authors: Submitting an Article
+
+1. **Create a branch** for your article:
+   ```bash
+   git checkout -b article/your-article-name
+   ```
+
+2. **Create your article** in `content/pages/your-article-name/`:
+   ```
+   content/pages/your-article-name/
+   ├── article.md
+   ├── assets/
+   │   └── [images and other assets]
+   └── visualizations/  # optional
+       └── visualization.ts
+   ```
+
+3. **Add required frontmatter** to your article:
+   ```yaml
+   ---
+   title: Your Article Title
+   subtitle: Optional subtitle
+   category: foundations  # or: guidances, blogs
+   published: 2026-01-21
+   authors:
+     - Your Name
+   description: Brief description for SEO and timeline
+   ---
+   ```
+
+4. **Test locally**:
+   ```bash
+   npm install
+   npm run build
+   npm run dev  # Verify at http://localhost:8080
+   ```
+
+5. **Create a Pull Request**:
+   - Push your branch to GitHub (or fork and push)
+   - Open a PR against `main` branch
+   - Fill out the PR template completely
+   - Include in PR description:
+     - **Article category** (foundation/guidance/tool)
+     - **Author checklist** (see template)
+     - **Abstract/Summary** of the article
+     - **Target audience** and prerequisites
+     - **Known issues** or areas needing attention
+     - **Screenshots** of key visualizations
+   - Request reviewers (or editors will assign)
+
+6. **Respond to review feedback**:
+   - Address comments inline in the PR
+   - Make revisions by pushing new commits
+   - Discuss and clarify with reviewers
+   - Mark conversations as resolved when addressed
+   - Request re-review when ready
+
+7. **Merge and deploy**:
+   - Once you have 2 approvals, the PR can be merged
+   - GitHub Actions automatically builds and deploys
+   - Your article goes live at day1inference.com!
+
+### Example Pull Request
+
+See [PR #1](https://github.com/startup-dr/day1inference/pull/1) for a complete example of:
+- How to structure a PR description
+- What level of detail to provide
+- Example reviews from two reviewers
+- How to present your article for review
+
+### Branch Protection
+
+The `main` branch is protected with these rules:
+- ✅ **Require pull request reviews** before merging
+- ✅ **Require 2 approving reviews** from reviewers
+- ✅ **Dismiss stale reviews** when new commits are pushed
+- ✅ **Require conversation resolution** before merging
+
+This ensures all articles undergo thorough peer review before publication.
+
+---
+
+## Review Guidelines for Reviewers
+
+### How to Review an Article
+
+1. **You'll be assigned** as a reviewer on a PR (or you can volunteer)
+2. **Read the full article** - Use the "Files changed" tab on GitHub
+3. **Evaluate using the checklist** (see below)
+4. **Provide feedback**:
+   - Add inline comments on specific lines in the GitHub PR
+   - General comments in the PR conversation
+   - Use "Request changes" button if revisions are needed
+   - Use "Approve" button when ready for publication
+5. **Choose anonymity** - Indicate in your review if you want public credit
+
+### Review Checklist: 10 Dimensions
+
+Rate each dimension on a scale of 1-5 (higher is better) and provide comments:
+
+#### Outstanding Communication (5 dimensions)
+
+1. **Article Structure (1-5)**: Clear intro/motivation, logical flow, appropriate organization, effective headings, strong conclusion
+2. **Writing Style (1-5)**: Clear language, appropriate technical depth, well-explained concepts, minimal jargon, engaging
+3. **Diagram & Interface Style (1-5)**: High-quality visuals, consistent design, accessible colors, clear labels, professional
+4. **Impact of Visualizations (1-5)**: Diagrams enhance understanding, interactives add value, visual examples clarify, figures support narrative
+5. **Readability (1-5)**: Appropriate for audience, monotonic complexity increase, no difficulty jumps, key concepts highlighted
+
+#### Scientific Correctness & Integrity (5 dimensions)
+
+6. **Well-Supported Claims (1-5)**: Evidence-backed, appropriate citations, no unsupported assertions, reproducible results
+7. **Limitations (1-5)**: Honest evaluation, trade-offs explained, scope bounded, edge cases addressed, caveats stated
+8. **Reproducibility (1-5)**: Clear methodology, complete code examples, replicable steps, dependencies listed
+9. **Citations (1-5)**: Relevant prior work, recent developments, original sources credited, complete bibliography, working links
+10. **Intellectual Honesty (1-5)**: Balanced perspective, rigorous approach, alternative viewpoints, conflicts disclosed, ethics addressed
+
+### What Makes a Good Review?
+
+✅ **Constructive** - Focus on improving the article, not just critiquing
+✅ **Specific** - Point to exact lines, sections, or issues
+✅ **Actionable** - Provide clear suggestions for improvement
+✅ **Balanced** - Note both strengths and weaknesses
+✅ **Thorough** - Use the full 10-dimension checklist
+✅ **Respectful** - Maintain professional, collegial tone
+
+### Example Review Comments
+
+**Good:**
+> Line 42: The claim that "model X outperforms Y by 3x" needs evidence. Consider adding:
+> - Link to benchmark paper
+> - Your own reproduction with methodology
+> - Or rephrase as "In our tests, model X showed 3x improvement..."
+
+**Not as helpful:**
+> This section is confusing.
+
+### Common Issues to Check
+
+- [ ] Technical accuracy and correctness
+- [ ] Citation completeness (all claims backed by sources)
+- [ ] Code examples work and are complete
+- [ ] Images load and display properly
+- [ ] Links are not broken
+- [ ] Spelling and grammar
+- [ ] Accessibility (alt text on images, color contrast)
+- [ ] Mobile responsiveness of visualizations
+
+### Review Timeline
+
+- **Initial review**: Within 2 weeks of assignment
+- **Re-review** (after revisions): Within 1 week
+
+### Final Recommendation
+
+Provide one of these recommendations:
+
+- ✅ **Accept as-is** - Ready to publish without changes
+- ✅ **Accept with minor revisions** - Small fixes (typos, formatting, minor clarifications)
+- ⚠️ **Major revisions needed** - Significant changes required before acceptance
+- ❌ **Reject** - Does not meet standards or fit the publication
+
+### Anonymity Options
+
+You can choose to be:
+- **Publicly credited** - Your name listed as a reviewer (with affiliation if desired)
+- **Anonymous** - Listed as "Anonymous Reviewer" with no attribution
+
+Indicate your preference in your review comments.
+
+### After Review
+
+Once 2 reviewers approve:
+1. Author or editor merges the PR
+2. GitHub Actions automatically deploys
+3. Article goes live on day1inference.com
+4. Non-anonymous reviewers are credited in acknowledgments
 
 ## Getting Help
 
