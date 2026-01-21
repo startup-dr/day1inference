@@ -318,12 +318,97 @@ const transformMarkdownWithFigures = (data, filepath) => {
     const reviewers = parsed.data.reviewers || [];
     const subtitle = parsed.data.subtitle || '';
     const teaser = parsed.data.teaser || '';
-    const pubDate = parsed.data.date ? new Date(parsed.data.date).toLocaleDateString('en-US', {
+    
+    // Format dates
+    const publishedDate = parsed.data.published ? new Date(parsed.data.published).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
         timeZone: 'America/New_York'
     }) : '';
+    
+    const updatedDate = parsed.data.updated ? new Date(parsed.data.updated).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'America/New_York'
+    }) : '';
+    
+    // Build custom byline HTML (completely replaces d-byline to avoid auto-generation)
+    // Uses Distill's base-grid system for consistent margins
+    const bylineHTML = `
+<div class="custom-byline base-grid">
+  <div class="byline-content">
+    <div class="byline-section">
+      <h3>Authors</h3>
+      ${authors.map(author => `<p>${author}</p>`).join('')}
+    </div>
+    ${reviewers.length > 0 ? `
+    <div class="byline-section">
+      <h3>Reviewers</h3>
+      ${reviewers.map(reviewer => `<p>${reviewer}</p>`).join('')}
+    </div>
+    ` : ''}
+    ${publishedDate ? `
+    <div class="byline-section">
+      <h3>Published</h3>
+      <p>${publishedDate}</p>
+    </div>
+    ` : ''}
+    ${updatedDate ? `
+    <div class="byline-section">
+      <h3>Updated</h3>
+      <p>${updatedDate}</p>
+    </div>
+    ` : ''}
+  </div>
+</div>
+
+<style>
+/* Hide any auto-generated d-byline elements */
+d-byline {
+  display: none !important;
+}
+
+.custom-byline {
+  contain: style;
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.8rem;
+  line-height: 1.8em;
+  padding: 1.5rem 0;
+  min-height: 1.8em;
+}
+
+.byline-content {
+  grid-column: text;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+.byline-section h3 {
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 0.5rem 0;
+}
+
+.byline-section p {
+  margin: 0.25rem 0;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 768px) {
+  .byline-content {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+</style>
+    `;
     
     return `<!doctype html>
 <head>
@@ -362,7 +447,7 @@ const transformMarkdownWithFigures = (data, filepath) => {
     ${subtitle ? `<p>${subtitle}</p>` : ''}
     ${teaser ? `\n\n${teaser}` : ''}
 </d-title>
-<d-byline></d-byline>
+${bylineHTML}
 
 <d-article>
 ${bodyHtmlWithIds}

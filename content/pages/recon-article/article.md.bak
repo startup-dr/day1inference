@@ -3,11 +3,8 @@ title: The RECON Stack for LLM Inference
 subtitle: Understanding the five layers of modern inference architecture
 category: foundations
 published: 2025-12-29
-updated: 2026-01-21
 authors:
   - Kareem Abdol-Hamid
-reviewers:
-  - AWS ML Team
 toc: true
 image: ./assets/thumbnail.svg
 description: Understanding the five layers of modern inference architecture
