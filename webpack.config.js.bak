@@ -15,7 +15,7 @@ const JOURNEYS_PATH = "content/journeys";
 const getSearchHTML = (showBrowseLinks = true) => {
     return `
         <div style="text-align: center; margin-bottom: 2rem;">
-            <h3 style="color: #232F3E; font-size: 1.3rem; margin-bottom: 1rem;">Know what you're looking for? Search here</h3>
+            ${showBrowseLinks ? '<h3 style="color: #232F3E; font-size: 1.3rem; margin-bottom: 1rem;">Know what you\'re looking for? Search here</h3>' : '<h3 style="color: #232F3E; font-size: 1.3rem; margin-bottom: 1rem;">Search</h3>'}
             <div class="search-container">
                 <input 
                     type="text" 
@@ -766,6 +766,7 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://distill.pub/template.v2.js"></script>
 <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+<link rel="stylesheet" href="/styles/search.css">
 </head>
 <body>
 
@@ -790,16 +791,10 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
     </div>
 </nav>
 
-<d-title>
-    <h1>All Content</h1>
-    <p>Machine learning foundations, guidances, and insights</p>
-</d-title>
-
-<div style="max-width: 800px; margin: 2rem auto; padding: 0 2rem;">
+<d-article>
+<div style="max-width: 800px; margin: 0 auto; padding: 0 2rem;">
     ${getSearchHTML(false)}
 </div>
-
-<d-article>
 ${articles.map(a => `
     <div class="article-card">
         <div class="article-content">
