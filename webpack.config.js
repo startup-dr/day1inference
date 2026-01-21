@@ -409,6 +409,17 @@ const generateIndex = () => {
                 imagePath = imagePath.replace(/\\/g, '/');
             }
             
+            // Extract plain text from markdown content for search
+            const plainText = parsed.content
+                .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+                .replace(/`[^`]+`/g, '') // Remove inline code
+                .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Extract link text
+                .replace(/#+\s+/g, '') // Remove markdown headers
+                .replace(/[*_~]/g, '') // Remove emphasis markers
+                .replace(/\n+/g, ' ') // Replace newlines with spaces
+                .replace(/\s+/g, ' ') // Normalize whitespace
+                .trim();
+            
             articles.push({
                 title: parsed.data.title,
                 description: parsed.data.description || '',
@@ -416,7 +427,8 @@ const generateIndex = () => {
                 date: published,
                 displayDate: formattedDate,
                 url: urlPath + '.html',
-                image: imagePath
+                image: imagePath,
+                content: plainText.substring(0, 5000) // Limit content to 5000 chars for search index
             });
         }
     });
@@ -582,6 +594,26 @@ class GenerateIndexPlugin {
     line-height: 1.4;
 }
 
+.search-result-context {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-style: italic;
+}
+
+.search-result-context mark {
+    background: #d0ea65;
+    color: #232F3E;
+    font-weight: 600;
+    padding: 0.1rem 0.2rem;
+    border-radius: 2px;
+    font-style: normal;
+}
+
 .search-result-item.no-results {
     color: #888;
     text-align: center;
@@ -690,7 +722,7 @@ class GenerateIndexPlugin {
 
 <footer style="background: white; color: #666; padding: 2rem; text-align: center; margin-top: 4rem; border-top: 1px solid #e0e0e0;">
     <p style="margin: 0; font-size: 0.9rem;">
-        Copyright © 2022, <a href="https://aws.amazon.com" target="_blank" rel="noopener" style="color: #666; text-decoration: none;">Amazon Web Services, Inc.</a> 
+        Copyright © 2026, <a href="https://aws.amazon.com" target="_blank" rel="noopener" style="color: #666; text-decoration: none;">Amazon Web Services, Inc.</a> 
         (<a href="https://aws.amazon.com/terms/?nc1=f_pr" target="_blank" rel="noopener" style="color: #666; text-decoration: none;">Terms & Conditions</a>)
     </p>
 </footer>
@@ -701,11 +733,57 @@ const articleIndex = ${JSON.stringify(articles.map(a => ({
     title: a.title,
     description: a.description,
     category: a.category,
-    url: a.url
+    url: a.url,
+    content: a.content
 })))};
 
 const searchInput = document.getElementById('site-search');
 const searchResults = document.getElementById('search-results');
+
+// Function to extract context around matched text
+function getMatchContext(text, query, contextLength = 80) {
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    const index = lowerText.indexOf(lowerQuery);
+    
+    if (index === -1) return null;
+    
+    // Find sentence boundaries around the match
+    let start = Math.max(0, index - contextLength);
+    let end = Math.min(text.length, index + query.length + contextLength);
+    
+    // Try to start at a word boundary
+    if (start > 0) {
+        const spaceIndex = text.indexOf(' ', start);
+        if (spaceIndex !== -1 && spaceIndex < index) {
+            start = spaceIndex + 1;
+        }
+    }
+    
+    // Try to end at a word boundary
+    if (end < text.length) {
+        const spaceIndex = text.lastIndexOf(' ', end);
+        if (spaceIndex !== -1 && spaceIndex > index + query.length) {
+            end = spaceIndex;
+        }
+    }
+    
+    const excerpt = text.substring(start, end);
+    const excerptLower = excerpt.toLowerCase();
+    const matchStart = excerptLower.indexOf(lowerQuery);
+    
+    if (matchStart === -1) return null;
+    
+    const before = excerpt.substring(0, matchStart);
+    const match = excerpt.substring(matchStart, matchStart + query.length);
+    const after = excerpt.substring(matchStart + query.length);
+    
+    return {
+        before: (start > 0 ? '...' : '') + before,
+        match: match,
+        after: after + (end < text.length ? '...' : '')
+    };
+}
 
 searchInput.addEventListener('input', (e) => {
     const query = e.target.value.trim().toLowerCase();
@@ -719,7 +797,8 @@ searchInput.addEventListener('input', (e) => {
     const results = articleIndex.filter(article => {
         return article.title.toLowerCase().includes(query) ||
                article.description.toLowerCase().includes(query) ||
-               article.category.toLowerCase().includes(query);
+               article.category.toLowerCase().includes(query) ||
+               article.content.toLowerCase().includes(query);
     });
     
     if (results.length === 0) {
@@ -728,13 +807,34 @@ searchInput.addEventListener('input', (e) => {
         return;
     }
     
-    searchResults.innerHTML = results.slice(0, 5).map(article => \`
-        <a href="\${article.url}" class="search-result-item">
-            <div class="search-result-category">\${article.category}</div>
-            <div class="search-result-title">\${article.title}</div>
-            <div class="search-result-description">\${article.description}</div>
-        </a>
-    \`).join('');
+    searchResults.innerHTML = results.slice(0, 5).map(article => {
+        // Check if query matches in title or description first
+        const titleMatch = article.title.toLowerCase().includes(query);
+        const descMatch = article.description.toLowerCase().includes(query);
+        
+        let contextHtml = '';
+        
+        // If not in title/description, show content match
+        if (!titleMatch && !descMatch && article.content) {
+            const context = getMatchContext(article.content, query);
+            if (context) {
+                contextHtml = \`
+                    <div class="search-result-context">
+                        \${context.before}<mark>\${context.match}</mark>\${context.after}
+                    </div>
+                \`;
+            }
+        }
+        
+        return \`
+            <a href="\${article.url}" class="search-result-item">
+                <div class="search-result-category">\${article.category}</div>
+                <div class="search-result-title">\${article.title}</div>
+                <div class="search-result-description">\${article.description}</div>
+                \${contextHtml}
+            </a>
+        \`;
+    }).join('');
     
     if (results.length > 5) {
         searchResults.innerHTML += '<div class="search-result-item search-more">+ ' + (results.length - 5) + ' more results. <a href="/timeline.html">View all content</a></div>';
