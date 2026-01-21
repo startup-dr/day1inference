@@ -1,0 +1,203 @@
+# Example Article Submission & Review
+
+This directory contains a **complete example** of the Day1Inference article submission and peer review process.
+
+## 📂 What's Included
+
+### 1. Example Pull Request
+**Branch:** `article/batch-size-optimization-example`  
+**View PR:** https://github.com/startup-dr/day1inference/pull/[NUMBER]
+
+This PR demonstrates a real article submission with:
+- Complete article with frontmatter
+- Practical code examples
+- Real-world case study
+- Production-ready content
+
+### 2. Example Article
+**Location:** `content/pages/batch-size-optimization/article.md`
+
+**Category:** Guidance  
+**Title:** "Optimizing Batch Size for Inference Performance"  
+**Authors:** Alex Chen, Jordan Rivera
+
+This article serves as a template showing:
+- ✅ Proper frontmatter structure
+- ✅ Code examples with explanations
+- ✅ Clear section organization
+- ✅ Real-world applications
+- ✅ Practical guidance format
+
+### 3. Example Peer Review
+**Location:** `.github/EXAMPLE_REVIEW.md`
+
+A complete, filled-out review from "Dr. Sarah Martinez" demonstrating:
+- How to rate articles on the 10 dimensions
+- How to provide constructive specific feedback
+- How to use line-by-line comments
+- How to make recommendations (Accept/Minor revisions/Major revisions/Reject)
+- Balance of praise and constructive criticism
+
+### 4. Example PR Description
+**Location:** `.github/EXAMPLE_PR_DESCRIPTION.md`
+
+Shows what a complete PR submission looks like with:
+- All checklist items completed
+- Abstract and context provided
+- Known issues acknowledged
+- Timeline and availability noted
+
+---
+
+## 🎯 How to Use This Example
+
+### For Authors Submitting Articles:
+
+1. **Review the example article** to see formatting, style, and depth:
+   ```bash
+   git checkout article/batch-size-optimization-example
+   cat content/pages/batch-size-optimization/article.md
+   ```
+
+2. **Check the example PR description** to see what information to provide:
+   ```bash
+   cat .github/EXAMPLE_PR_DESCRIPTION.md
+   ```
+
+3. **Use it as a template** for your own submission:
+   - Similar frontmatter structure
+   - Similar section organization
+   - Similar level of code examples
+   - Similar depth of explanation
+
+### For Reviewers:
+
+1. **Read the example review** to understand expectations:
+   ```bash
+   cat .github/EXAMPLE_REVIEW.md
+   ```
+
+2. **Note the structure:**
+   - Rate each of 10 dimensions on 1-5 scale
+   - Provide specific comments for each dimension
+   - Give line-by-line or section-specific feedback
+   - Make clear recommendation with action items
+
+3. **Observe the tone:**
+   - Constructive and respectful
+   - Specific and actionable
+   - Balanced (strengths + areas for improvement)
+   - Professional but friendly
+
+### For Sending to Potential Reviewers:
+
+Share this example to show what the review process looks like:
+
+```
+Hi [Name],
+
+We'd love for you to review articles for Day1Inference. Here's an example 
+of the process:
+
+- Example PR: https://github.com/startup-dr/day1inference/pull/[NUMBER]
+- Example Review: https://github.com/startup-dr/day1inference/blob/main/.github/EXAMPLE_REVIEW.md
+- Review Guide: https://github.com/startup-dr/day1inference/blob/main/.github/REVIEW_PROCESS.md
+
+Reviews typically take 1-3 hours. You can choose to be credited or remain anonymous.
+
+Let me know if you're interested!
+```
+
+---
+
+## 📋 Review Process Summary
+
+1. **Author submits PR** with article in `content/pages/article-name/`
+2. **PR template auto-fills** with checklist and fields
+3. **2 reviewers assigned** (from CODEOWNERS or manually)
+4. **Reviewers use checklist** to provide structured feedback
+5. **Author revises** based on feedback
+6. **2 approvals required** before merge
+7. **Article published** automatically when merged to main
+
+---
+
+## 🎓 Key Takeaways from the Example
+
+### Article Quality (from example article):
+- **Practical focus** - Immediately actionable advice
+- **Real code examples** - Copy-pasteable, production-ready
+- **Honest about trade-offs** - No oversimplification
+- **Well-structured** - Clear progression from basics to advanced
+- **Production context** - Addresses real-world concerns
+
+### Review Quality (from example review):
+- **Specific and constructive** - Points to exact issues
+- **Balanced** - Acknowledges strengths, suggests improvements
+- **Actionable** - Clear recommendations for what to change
+- **Dimensional** - Covers all 10 review criteria systematically
+- **Reasonable** - Distinguishes "required" from "recommended" changes
+
+---
+
+## 📊 Review Dimensions Explained
+
+### Outstanding Communication (5 dimensions)
+1. **Article Structure** - Organization, flow, hierarchy
+2. **Writing Style** - Clarity, accessibility, engagement
+3. **Diagram & Interface Style** - Visual quality, consistency
+4. **Impact of Visualizations** - Do they enhance understanding?
+5. **Readability** - Appropriate for audience, no sudden jumps
+
+### Scientific Correctness & Integrity (5 dimensions)
+1. **Well-Supported Claims** - Evidence, citations, methodology
+2. **Limitations** - Honest evaluation of trade-offs
+3. **Reproducibility** - Can readers replicate results?
+4. **Citations** - Proper attribution, complete bibliography
+5. **Intellectual Honesty** - Balanced, rigorous, transparent
+
+---
+
+## 🚀 Getting Started
+
+### To Submit an Article:
+1. Read the [Review Process](.github/REVIEW_PROCESS.md)
+2. Review this example article
+3. Create your article branch
+4. Open a PR (template will auto-fill)
+5. Request reviewers
+
+### To Review an Article:
+1. Read the [Review Checklist](.github/REVIEW_CHECKLIST.md)
+2. Review this example review
+3. Comment on the PR with structured feedback
+4. Use "Approve" or "Request Changes" on GitHub
+
+### To Set Up Branch Protection:
+1. Follow [Branch Protection Setup](.github/BRANCH_PROTECTION_SETUP.md)
+2. Require 2 approvals
+3. Enable review from code owners
+
+---
+
+## 📞 Questions?
+
+- **Process questions:** See [REVIEW_PROCESS.md](.github/REVIEW_PROCESS.md)
+- **Technical questions:** Open an issue
+- **Example questions:** Reference this file
+
+---
+
+## 🔗 Quick Links
+
+- **Example PR:** https://github.com/startup-dr/day1inference/pull/[NUMBER]
+- **Example Article:** [`content/pages/batch-size-optimization/article.md`](content/pages/batch-size-optimization/article.md)
+- **Example Review:** [`.github/EXAMPLE_REVIEW.md`](.github/EXAMPLE_REVIEW.md)
+- **Example PR Description:** [`.github/EXAMPLE_PR_DESCRIPTION.md`](.github/EXAMPLE_PR_DESCRIPTION.md)
+- **Review Checklist:** [`.github/REVIEW_CHECKLIST.md`](.github/REVIEW_CHECKLIST.md)
+- **Review Process:** [`.github/REVIEW_PROCESS.md`](.github/REVIEW_PROCESS.md)
+- **Branch Protection Setup:** [`.github/BRANCH_PROTECTION_SETUP.md`](.github/BRANCH_PROTECTION_SETUP.md)
+
+---
+
+*This example submission is maintained as a reference for the Day1Inference community.*
