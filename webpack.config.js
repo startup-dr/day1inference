@@ -406,7 +406,8 @@ const generateIndex = () => {
         const content = fs.readFileSync(file, 'utf8');
         const parsed = matter(content);
         
-        if (parsed.data.title && parsed.data.published && parsed.data.category) {
+        // Skip draft articles
+        if (parsed.data.title && parsed.data.published && parsed.data.category && parsed.data.category !== 'draft') {
             const published = parsed.data.published;
             const date = new Date(published);
             const formattedDate = date.toLocaleDateString('en-US', {
