@@ -4,13 +4,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://distill.pub/template.v2.js"></script>
 <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+<style>
+.journey-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 0 0 3rem 0;
+}
+
+.journey-card {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.journey-card:hover {
+    border-color: #38ad87;
+    box-shadow: 0 8px 24px rgba(56, 173, 135, 0.25);
+    transform: translateY(-4px);
+}
+
+.journey-card h2 {
+    color: #232F3E;
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.journey-card p {
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.journey-card .arrow {
+    margin-top: 1rem;
+    color: #38ad87;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.journey-card:hover .arrow {
+    gap: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+    .journey-cards {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+</style>
 </head>
 <body>
 
 <d-front-matter>
 <script type="text/json">{
-  "title": "Day 1 Inference - Timeline",
-  "description": "Machine learning foundations, guidances, and insights"
+  "title": "Day 1 Inference",
+  "description": "Choose your inference journey - optimize for latency, scale, or accuracy"
 }</script>
 </d-front-matter>
 
@@ -18,85 +76,62 @@
     <a href="/" class="nav-logo">
         <img src="/logo.svg" alt="Day 1 Inference" />
         Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
     </a>
     <div class="nav-links">
-        <a href="/#foundations">Foundations</a>
-        <a href="/#guidances">Guidances</a>
-        <a href="/#blogs">Blogs</a>
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
 
-<d-title>
-    <h1>Day 1 Inference</h1>
-    <p>Machine learning foundations, guidances, and insights</p>
-</d-title>
+<div style="text-align: center; padding: 4rem 2rem 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; color: #232F3E;">Day 1 Inference</h1>
+    <p style="font-size: 1.25rem; color: #666;">Choose your inference optimization journey</p>
+</div>
 
-<d-article>
+<div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem 4rem;">
+    <div class="journey-cards">
+        <a href="/latency-critical.html" class="journey-card">
+            <h2>⚡ Latency Critical</h2>
+            <p>
+                Optimize for minimal latency. Understand performance metrics, RECON stack components, 
+                and trade-offs between managed vs. unmanaged deployments.
+            </p>
+            <div class="arrow">Start journey →</div>
+        </a>
 
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">foundations • Dec 28, 2025</div>
-            <h3><a href="figure-example.html">Figure and Caption System Example</a></h3>
-            <p>An example article showing how to use figures and captions in the new system</p>
+        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">📈 Production Scale</h2>
+                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+            </div>
+            <p>
+                Serve massive scale with multi-region and multi-tenant architectures. 
+                Master capacity planning and global inference deployment.
+            </p>
         </div>
-        
+
+        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">🎯 Accuracy Critical</h2>
+                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+            </div>
+            <p>
+                Maximize model accuracy through fine-tuning, evaluation frameworks, 
+                and domain-specific optimization techniques.
+            </p>
+        </div>
     </div>
 
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">foundations • Dec 28, 2025</div>
-            <h3><a href="recon-article.html">The RECON Stack for LLM Inference</a></h3>
-            <p>Understanding the five layers of modern inference architecture</p>
-        </div>
-        <img src="/recon-article/assets/thumbnail.svg" alt="The RECON Stack for LLM Inference" class="article-image" />
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; text-align: center;">
+        <p style="color: #666; font-size: 0.95rem;">
+            Not sure where to start? <a href="/timeline.html" style="color: #007f80; text-decoration: none;">Browse all content</a> 
+            or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON stack</a>.
+        </p>
     </div>
-
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">guidances • Dec 16, 2025</div>
-            <h3><a href="example-guidance.html">Best Practices for Model Training</a></h3>
-            <p>Practical tips for training machine learning models efficiently</p>
-        </div>
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="Best Practices for Model Training" class="article-image" />
-    </div>
-
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">foundations • Dec 14, 2025</div>
-            <h3><a href="example-foundation.html">Understanding Neural Networks</a></h3>
-            <p>A comprehensive guide to the fundamentals of neural networks</p>
-        </div>
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="Understanding Neural Networks" class="article-image" />
-    </div>
-
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">guidances • Dec 11, 2025</div>
-            <h3><a href="example-benchmark.html">Model Performance Benchmarking Framework</a></h3>
-            <p>Comprehensive framework for benchmarking ML model performance across different metrics</p>
-        </div>
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="Model Performance Benchmarking Framework" class="article-image" />
-    </div>
-
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">guidances • Dec 9, 2025</div>
-            <h3><a href="example-solution.html">End-to-End ML Pipeline Solution</a></h3>
-            <p>Complete solution for building production ML pipelines from data ingestion to deployment</p>
-        </div>
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="End-to-End ML Pipeline Solution" class="article-image" />
-    </div>
-
-    <div class="article-card">
-        <div class="article-content">
-            <div class="article-meta">guidances • Dec 19, 2024</div>
-            <h3><a href="inference-visualizer.html">GPU Inference Cluster Visualizer</a></h3>
-            <p>Interactive simulation of GPU inference clusters with real-time request handling, batching, and performance metrics</p>
-        </div>
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='917' height='384'%3E%3Crect width='917' height='384' fill='%23cccccc'/%3E%3C/svg%3E" alt="GPU Inference Cluster Visualizer" class="article-image" />
-    </div>
-
-</d-article>
+</div>
 
 <script src="/main.bundle.js"></script>
 </body>

@@ -23,7 +23,7 @@ d-article h6 {
 
 .nav-logo {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 0.5rem;
     text-decoration: none;
     color: white;
@@ -34,6 +34,22 @@ d-article h6 {
 .nav-logo img {
     height: 32px;
     width: auto;
+    align-self: center;
+}
+
+.nav-logo-tagline {
+    font-size: 0.75rem;
+    font-weight: 400;
+    margin-left: 0.3rem;
+}
+
+.nav-logo-tagline .powered-by {
+    color: #727e8c;
+}
+
+.nav-logo-tagline .aws {
+    color: #FF9900;
+    font-weight: 600;
 }
 
 .nav-links {
@@ -49,7 +65,7 @@ d-article h6 {
 }
 
 .nav-links a:hover {
-    color: #FF9900;
+    color: #d0ea65;
 }
 
 /* Article Cards (for timeline) */
@@ -95,7 +111,7 @@ d-article h6 {
 }
 
 .article-card h3 a:hover {
-    color: #667eea;
+    color: #007f80;
 }
 
 .article-card p {
