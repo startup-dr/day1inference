@@ -201,7 +201,7 @@ Update the categories in your templates:
 3. `.github/EXAMPLE_REVIEW.md` - Complete example review
 
 ### Public URLs (once PR is created):
-- Example PR: `https://github.com/startup-dr/day1inference/pull/1`
+- Example PR: `https://github.com/startup-dr/day1inference/pull/[NUMBER]`
 - Example review: `https://github.com/startup-dr/day1inference/blob/main/.github/EXAMPLE_REVIEW.md`
 - Process guide: `https://github.com/startup-dr/day1inference/blob/main/.github/REVIEW_PROCESS.md`
 
