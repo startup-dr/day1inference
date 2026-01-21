@@ -9,6 +9,237 @@ const matter = require("gray-matter");
 const glob = require("glob");
 
 const PAGES_PATH = "content/pages";
+const JOURNEYS_PATH = "content/journeys";
+
+const generateJourneyPage = (journeyData) => {
+    const typeColors = {
+        overview: '#007f80',    // Dark turquoise - foundational
+        article: '#006280',     // Darkest blue - technical depth
+        solution: '#38ad87',    // Medium - actionable
+        tool: '#f59e0b'         // Orange/yellow - interactive
+    };
+    
+    const typeLabels = {
+        overview: 'Overview',
+        article: 'Deep Dive',
+        solution: 'Solution',
+        tool: 'Tool'
+    };
+    
+    // Helper to get metadata from internal articles
+    const getArticleMetadata = (url) => {
+        if (!url || url.startsWith('http')) return null;
+        
+        // Convert URL to file path
+        const articlePath = url.replace(/^\//, '').replace('.html', '');
+        
+        // Try to find the article.md file
+        const possiblePaths = [
+            path.join(PAGES_PATH, articlePath, 'article.md'),
+            path.join(PAGES_PATH, `${articlePath}.md`)
+        ];
+        
+        for (const filePath of possiblePaths) {
+            if (fs.existsSync(filePath)) {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const parsed = matter(content);
+                return {
+                    title: parsed.data.title || '',
+                    description: parsed.data.description || parsed.data.subtitle || ''
+                };
+            }
+        }
+        
+        return null;
+    };
+    
+    const renderCard = (card) => {
+        const color = typeColors[card.type] || '#666';
+        const label = typeLabels[card.type] || 'Content';
+        const isComingSoon = card.status === 'coming-soon';
+        const isExternal = card.url && (card.url.startsWith('http://') || card.url.startsWith('https://'));
+        
+        // Get metadata from internal articles if sourceType is internal
+        let title = card.title || '';
+        let description = card.description || '';
+        
+        if (card.sourceType === 'internal' && card.url) {
+            const metadata = getArticleMetadata(card.url);
+            if (metadata) {
+                title = metadata.title;
+                description = metadata.description;
+            }
+        }
+        
+        const cardStyle = isComingSoon 
+            ? 'opacity: 0.5; cursor: not-allowed;' 
+            : '';
+        
+        const tag = isComingSoon ? 'div' : 'a';
+        const hrefAttr = (!isComingSoon && card.url) ? `href="${card.url}"` : '';
+        const targetAttr = (isExternal && !isComingSoon) ? 'target="_blank" rel="noopener"' : '';
+        
+        return `
+        <${tag} class="journey-content-card" ${hrefAttr} ${targetAttr} style="${cardStyle}">
+            <div class="card-header">
+                <span class="card-type" style="background: ${color};">${label}</span>
+                ${isComingSoon ? '<span class="coming-soon-badge">Coming Soon</span>' : ''}
+                ${isExternal && !isComingSoon ? '<span class="external-badge">↗</span>' : ''}
+            </div>
+            <h3>${title}</h3>
+            <p>${description}</p>
+        </${tag}>
+        `;
+    };
+    
+    const sectionsHTML = journeyData.sections.map(section => `
+        <div class="journey-section">
+            <h2 class="section-title">${section.title}</h2>
+            ${section.description ? `<p class="section-description">${section.description}</p>` : ''}
+            <div class="section-cards">
+                ${section.cards.map(renderCard).join('')}
+            </div>
+        </div>
+    `).join('');
+    
+    return `<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://distill.pub/template.v2.js"></script>
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+<style>
+.section-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.journey-content-card {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.journey-content-card:not([style*="cursor: not-allowed"]):hover {
+    border-color: #38ad87;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(56, 173, 135, 0.3);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.card-type {
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coming-soon-badge {
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.external-badge {
+    color: #666;
+    font-size: 1.25rem;
+}
+
+.journey-content-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: #232F3E;
+}
+
+.journey-content-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.journey-section {
+    margin: 3rem 0;
+}
+
+.section-title {
+    font-size: 1.75rem;
+    color: #232F3E;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.section-description {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .section-cards {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<d-front-matter>
+<script type="text/json">{
+  "title": "${journeyData.title}",
+  "description": "${journeyData.description}"
+}</script>
+</d-front-matter>
+
+<nav class="site-nav">
+    <a href="/" class="nav-logo">
+        <img src="/logo.svg" alt="Day 1 Inference" />
+        Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
+    </a>
+    <div class="nav-links">
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
+    </div>
+</nav>
+
+<div style="text-align: center; padding: 3rem 2rem 1rem;">
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #232F3E;">${journeyData.title}</h1>
+    <p style="font-size: 1.1rem; color: #666; max-width: 800px; margin: 0 auto;">${journeyData.subtitle}</p>
+</div>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem;">
+    ${sectionsHTML}
+    
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; text-align: center;">
+        <p style="color: #666;">
+            <a href="/" style="color: #007f80; text-decoration: none;">← Back to all journeys</a>
+        </p>
+    </div>
+</div>
+
+<script src="/main.bundle.js"></script>
+</body>`;
+};
 
 const transformMarkdownWithFigures = (data, filepath) => {
     const articleDir = path.dirname(filepath);
@@ -80,11 +311,13 @@ const transformMarkdownWithFigures = (data, filepath) => {
     <a href="/" class="nav-logo">
         <img src="/logo.svg" alt="Day 1 Inference" />
         Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
     </a>
     <div class="nav-links">
-        <a href="/#foundations">Foundations</a>
-        <a href="/#guidances">Guidances</a>
-        <a href="/#blogs">Blogs</a>
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
 
@@ -198,7 +431,159 @@ class GenerateIndexPlugin {
         compiler.hooks.emit.tapAsync('GenerateIndexPlugin', (compilation, callback) => {
             const articles = generateIndex();
             
+            // Generate journey pages from JSON
+            const journeyFiles = glob.sync(`${JOURNEYS_PATH}/*.json`);
+            journeyFiles.forEach(file => {
+                const journeyData = JSON.parse(fs.readFileSync(file, 'utf8'));
+                const journeyName = path.basename(file, '.json');
+                const journeyHTML = generateJourneyPage(journeyData);
+                
+                compilation.assets[`${journeyName}.html`] = {
+                    source: () => journeyHTML,
+                    size: () => journeyHTML.length
+                };
+            });
+            
             const indexHTML = `<!doctype html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://distill.pub/template.v2.js"></script>
+<link rel="icon" type="image/svg+xml" href="logo-icon.svg">
+<style>
+.journey-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 0 0 3rem 0;
+}
+
+.journey-card {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.journey-card:hover {
+    border-color: #38ad87;
+    box-shadow: 0 8px 24px rgba(56, 173, 135, 0.25);
+    transform: translateY(-4px);
+}
+
+.journey-card h2 {
+    color: #232F3E;
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.journey-card p {
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.journey-card .arrow {
+    margin-top: 1rem;
+    color: #38ad87;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.journey-card:hover .arrow {
+    gap: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+    .journey-cards {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<d-front-matter>
+<script type="text/json">{
+  "title": "Day 1 Inference",
+  "description": "Choose your inference journey - optimize for latency, scale, or accuracy"
+}</script>
+</d-front-matter>
+
+<nav class="site-nav">
+    <a href="/" class="nav-logo">
+        <img src="/logo.svg" alt="Day 1 Inference" />
+        Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
+    </a>
+    <div class="nav-links">
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
+    </div>
+</nav>
+
+<div style="text-align: center; padding: 4rem 2rem 2rem;">
+    <h1 style="font-size: 3rem; margin-bottom: 1rem; color: #232F3E;">Day 1 Inference</h1>
+    <p style="font-size: 1.25rem; color: #666;">Choose your inference optimization journey</p>
+</div>
+
+<div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem 4rem;">
+    <div class="journey-cards">
+        <a href="/latency-critical.html" class="journey-card">
+            <h2>⚡ Latency Critical</h2>
+            <p>
+                Optimize for minimal latency. Understand performance metrics, RECON stack components, 
+                and trade-offs between managed vs. unmanaged deployments.
+            </p>
+            <div class="arrow">Start journey →</div>
+        </a>
+
+        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">📈 Production Scale</h2>
+                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+            </div>
+            <p>
+                Serve massive scale with multi-region and multi-tenant architectures. 
+                Master capacity planning and global inference deployment.
+            </p>
+        </div>
+
+        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h2 style="margin: 0;">🎯 Accuracy Critical</h2>
+                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+            </div>
+            <p>
+                Maximize model accuracy through fine-tuning, evaluation frameworks, 
+                and domain-specific optimization techniques.
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid #e0e0e0; text-align: center;">
+        <p style="color: #666; font-size: 0.95rem;">
+            Not sure where to start? <a href="/timeline.html" style="color: #007f80; text-decoration: none;">Browse all content</a> 
+            or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON stack</a>.
+        </p>
+    </div>
+</div>
+
+<script src="/main.bundle.js"></script>
+</body>`;
+            
+            // Also generate timeline page
+            const timelineHTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -209,7 +594,7 @@ class GenerateIndexPlugin {
 
 <d-front-matter>
 <script type="text/json">{
-  "title": "Day 1 Inference - Timeline",
+  "title": "Day 1 Inference - All Content",
   "description": "Machine learning foundations, guidances, and insights"
 }</script>
 </d-front-matter>
@@ -218,16 +603,18 @@ class GenerateIndexPlugin {
     <a href="/" class="nav-logo">
         <img src="/logo.svg" alt="Day 1 Inference" />
         Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
     </a>
     <div class="nav-links">
-        <a href="/#foundations">Foundations</a>
-        <a href="/#guidances">Guidances</a>
-        <a href="/#blogs">Blogs</a>
+        <a href="/timeline.html">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
 
 <d-title>
-    <h1>Day 1 Inference</h1>
+    <h1>All Content</h1>
     <p>Machine learning foundations, guidances, and insights</p>
 </d-title>
 
@@ -250,6 +637,11 @@ ${articles.map(a => `
             compilation.assets['index.html'] = {
                 source: () => indexHTML,
                 size: () => indexHTML.length
+            };
+            
+            compilation.assets['timeline.html'] = {
+                source: () => timelineHTML,
+                size: () => timelineHTML.length
             };
             
             callback();
