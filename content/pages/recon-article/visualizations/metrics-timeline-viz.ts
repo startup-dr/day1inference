@@ -37,7 +37,6 @@ export function initMetricsTimeline(): void {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = `
     width: 100%;
-    background: #f8f9fa;
     border-radius: 8px;
     padding: 20px;
   `;

@@ -44,28 +44,14 @@ export function initGoodputTriangle(): void {
   ];
 
   let selectedUseCase: UseCase = useCases[1]; // Default to chatbot
-  let costMultiplier = 1.0; // 0.5 to 2.0, affects tolerance range
 
   // Create wrapper
   const wrapper = document.createElement('div');
   wrapper.style.cssText = `
     width: 100%;
-    background: #f8f9fa;
     border-radius: 8px;
     padding: 30px 20px;
   `;
-
-  // Title
-  const title = document.createElement('div');
-  title.style.cssText = `
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 30px;
-  `;
-  title.textContent = 'Goodput Optimization Tradeoff';
-  wrapper.appendChild(title);
 
   // Create main tradeoff slider visualization
   const sliderViz = document.createElement('div');
@@ -184,44 +170,6 @@ export function initGoodputTriangle(): void {
   sliderViz.appendChild(svg);
   wrapper.appendChild(sliderViz);
 
-  // Cost slider
-  const costSection = document.createElement('div');
-  costSection.style.cssText = 'margin-bottom: 30px; padding: 20px; background: white; border-radius: 8px;';
-
-  const costTitle = document.createElement('div');
-  costTitle.style.cssText = 'text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 16px; color: #333;';
-  costTitle.textContent = 'Resource Cost (GPU Budget)';
-  
-  const costSliderWrapper = document.createElement('div');
-  costSliderWrapper.style.cssText = 'display: flex; align-items: center; gap: 15px; justify-content: center;';
-  
-  const costMinLabel = document.createElement('span');
-  costMinLabel.textContent = 'Low';
-  costMinLabel.style.cssText = 'font-size: 14px; color: #666; min-width: 40px;';
-  
-  const costSlider = document.createElement('input');
-  costSlider.type = 'range';
-  costSlider.min = '50';
-  costSlider.max = '200';
-  costSlider.value = '100';
-  costSlider.style.cssText = 'width: 400px; cursor: pointer;';
-  
-  const costMaxLabel = document.createElement('span');
-  costMaxLabel.textContent = 'High';
-  costMaxLabel.style.cssText = 'font-size: 14px; color: #666; min-width: 40px;';
-  
-  const costExplainer = document.createElement('div');
-  costExplainer.style.cssText = 'text-align: center; font-size: 13px; color: #666; margin-top: 10px; font-style: italic;';
-  costExplainer.textContent = 'More GPUs = less throughput-latency tradeoff (can achieve both)';
-
-  costSliderWrapper.appendChild(costMinLabel);
-  costSliderWrapper.appendChild(costSlider);
-  costSliderWrapper.appendChild(costMaxLabel);
-  costSection.appendChild(costTitle);
-  costSection.appendChild(costSliderWrapper);
-  costSection.appendChild(costExplainer);
-  wrapper.appendChild(costSection);
-
   // Use case cards
   const cardsContainer = document.createElement('div');
   cardsContainer.style.cssText = `
@@ -291,6 +239,9 @@ export function initGoodputTriangle(): void {
 
   // Update visualization function
   function updateVisualization() {
+    // Fixed cost multiplier at 1.0 (no cost slider)
+    const costMultiplier = 1.0;
+    
     // Cost affects the slider endpoints - higher cost = slider shrinks (both endpoints improve)
     // At low cost, must choose between throughput and latency
     // At high cost (many GPUs), can achieve both - slider shrinks toward optimal point
@@ -332,12 +283,6 @@ export function initGoodputTriangle(): void {
     targetLabel.setAttribute('fill', selectedUseCase.color);
     targetLabel.textContent = selectedUseCase.name;
   }
-
-  // Cost slider event
-  costSlider.addEventListener('input', (e) => {
-    costMultiplier = Number((e.target as HTMLInputElement).value) / 100;
-    updateVisualization();
-  });
 
   // Initial render - select chatbot by default
   selectedUseCase = useCases[1];

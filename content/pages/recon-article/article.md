@@ -46,7 +46,7 @@ LLM inference demands both paradigms simultaneously.
 <figure style="margin: 2rem 0;">
   <div id="paradigm-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
-    Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web, with only memory optimization as its unique constraint.
+    Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web.
   </figcaption>
 </figure>
 
