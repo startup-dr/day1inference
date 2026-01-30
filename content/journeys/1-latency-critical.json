@@ -2,6 +2,7 @@
   "title": "Latency Critical Inference",
   "subtitle": "Optimize for minimal response time and understand the performance characteristics of your inference stack",
   "description": "Master the techniques and architecture decisions needed to achieve sub-second latency for LLM inference",
+  "status": "available",
   "sections": [
     {
       "title": "Getting Started",

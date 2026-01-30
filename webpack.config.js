@@ -569,7 +569,9 @@ class GenerateIndexPlugin {
             const journeyFiles = glob.sync(`${JOURNEYS_PATH}/*.json`);
             journeyFiles.forEach(file => {
                 const journeyData = JSON.parse(fs.readFileSync(file, 'utf8'));
-                const journeyName = path.basename(file, '.json');
+                const fileName = path.basename(file, '.json');
+                // Strip number prefix for output filename (e.g., "1-latency-critical" -> "latency-critical")
+                const journeyName = fileName.replace(/^\d+-/, '');
                 const journeyHTML = generateJourneyPage(journeyData);
                 
                 compilation.assets[`${journeyName}.html`] = {
@@ -791,36 +793,43 @@ class GenerateIndexPlugin {
 
 <div style="max-width: 1400px; margin: 0 auto; padding: 0 2rem 4rem;">
     <div class="journey-cards">
-        <a href="/latency-critical.html" class="journey-card">
-            <h2>⚡ Latency Critical</h2>
-            <p>
-                Optimize for minimal latency. Understand performance metrics, RECON framework components, 
-                and trade-offs between managed vs. unmanaged deployments.
-            </p>
-            <div class="arrow">Start journey →</div>
-        </a>
-
-        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                <h2 style="margin: 0;">📈 Production Scale</h2>
-                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
-            </div>
-            <p>
-                Serve massive scale with multi-region and multi-tenant architectures. 
-                Master capacity planning and global inference deployment.
-            </p>
-        </div>
-
-        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                <h2 style="margin: 0;">🎯 Accuracy Critical</h2>
-                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
-            </div>
-            <p>
-                Maximize model accuracy through fine-tuning, evaluation frameworks, 
-                and domain-specific optimization techniques.
-            </p>
-        </div>
+        ${(() => {
+            const journeyFiles = glob.sync(`${JOURNEYS_PATH}/*.json`).sort();
+            const journeyIcons = {
+                'latency-critical': '⚡',
+                'production-inference': '📈',
+                'accuracy-critical': '🎯'
+            };
+            
+            return journeyFiles.map(file => {
+                const journeyData = JSON.parse(fs.readFileSync(file, 'utf8'));
+                const fileName = path.basename(file, '.json');
+                // Strip number prefix (e.g., "1-latency-critical" -> "latency-critical")
+                const journeyName = fileName.replace(/^\d+-/, '');
+                const icon = journeyIcons[journeyName] || '📚';
+                const isAvailable = journeyData.status === 'available';
+                
+                if (isAvailable) {
+                    return `
+                        <a href="/${journeyName}.html" class="journey-card">
+                            <h2>${icon} ${journeyData.title}</h2>
+                            <p>${journeyData.description}</p>
+                            <div class="arrow">Start journey →</div>
+                        </a>
+                    `;
+                } else {
+                    return `
+                        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                                <h2 style="margin: 0;">${icon} ${journeyData.title}</h2>
+                                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+                            </div>
+                            <p>${journeyData.description}</p>
+                        </div>
+                    `;
+                }
+            }).join('\n');
+        })()}
     </div>
 
     <div style="margin-top: 4rem;">
