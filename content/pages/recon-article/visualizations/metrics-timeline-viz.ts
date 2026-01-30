@@ -42,6 +42,78 @@ export function initMetricsTimeline(): void {
     padding: 20px;
   `;
 
+  // Add legend/key at the top
+  const legend = document.createElement('div');
+  legend.style.cssText = `
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #666;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  `;
+
+  const legendItems = [
+    { label: 'Prefill (TTFT)', color: '#3498db', type: 'rect' },
+    { label: 'Decode Tokens (TPOT)', color: '#2ecc71', type: 'circle' },
+    { label: 'End-to-End Latency', color: '#e74c3c', type: 'bracket' },
+  ];
+
+  legendItems.forEach(item => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+    if (item.type === 'rect') {
+      const symbol = document.createElement('div');
+      symbol.style.cssText = `
+        width: 20px;
+        height: 12px;
+        background: ${item.color};
+        opacity: 0.4;
+        border-radius: 2px;
+      `;
+      itemDiv.appendChild(symbol);
+    } else if (item.type === 'circle') {
+      const symbol = document.createElement('div');
+      symbol.style.cssText = `
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: ${item.color};
+      `;
+      itemDiv.appendChild(symbol);
+    } else if (item.type === 'bracket') {
+      // Create SVG bracket symbol
+      const bracketSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      bracketSvg.setAttribute('width', '24');
+      bracketSvg.setAttribute('height', '12');
+      bracketSvg.setAttribute('viewBox', '0 0 24 12');
+      
+      const bracketPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      bracketPath.setAttribute('d', 'M 2 2 L 2 6 M 2 4 L 22 4 M 22 2 L 22 6');
+      bracketPath.setAttribute('stroke', item.color);
+      bracketPath.setAttribute('stroke-width', '1.5');
+      bracketPath.setAttribute('fill', 'none');
+      bracketPath.setAttribute('opacity', '0.6');
+      
+      bracketSvg.appendChild(bracketPath);
+      itemDiv.appendChild(bracketSvg);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = item.label;
+
+    itemDiv.appendChild(label);
+    legend.appendChild(itemDiv);
+  });
+
+  wrapper.appendChild(legend);
+
   // Create SVG for timeline
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 1000 400');
@@ -266,13 +338,10 @@ export function initMetricsTimeline(): void {
       ? startedRequests.reduce((sum, r) => sum + r.ttft, 0) / startedRequests.length
       : 0;
 
-    // Calculate average TPOT for generating requests
-    const generatingRequests = requests.filter(r => 
-      currentTime >= r.arrivalTime + r.ttft &&
-      currentTime <= r.arrivalTime + r.ttft + r.numTokens * r.tpot
-    );
-    const avgTPOT = generatingRequests.length > 0
-      ? generatingRequests.reduce((sum, r) => sum + r.tpot, 0) / generatingRequests.length
+    // Calculate average TPOT for any request that has started generating (not just actively generating)
+    const generatedRequests = requests.filter(r => currentTime >= r.arrivalTime + r.ttft);
+    const avgTPOT = generatedRequests.length > 0
+      ? generatedRequests.reduce((sum, r) => sum + r.tpot, 0) / generatedRequests.length
       : 0;
 
     // Calculate average E2EL for completed requests
@@ -316,9 +385,7 @@ export function initMetricsTimeline(): void {
     
     currentTime += 16; // ~60fps
     if (currentTime > timelineDuration) {
-      currentTime = timelineDuration;
-      isPlaying = false;
-      playButton.textContent = 'Play';
+      currentTime = 0; // Loop back to start
     }
     
     updateMetrics();

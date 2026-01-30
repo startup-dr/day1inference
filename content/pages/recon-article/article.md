@@ -57,9 +57,13 @@ This creates a unique tension. Pure HPC approaches fail because batching request
 
 ### Measuring Inference Performance
 
-{{fragment-inference-performance}}
-
 Before exploring how to solve this tension, we need to understand how inference performance is measured. Different applications care about different aspects of the serving experience.
+
+<figure id="metrics-timeline-viz" style="margin: 2rem 0;">
+  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
+    Interactive timeline showing how TTFT, TPOT, E2EL, and throughput metrics evolve as 5 concurrent requests progress. Use the slider or play button to scrub through time.
+  </figcaption>
+</figure>
 
 **Time to First Token (TTFT)** measures how long users wait before seeing any response. This metric captures the prefill phase where the entire prompt is processed. A chatbot needs TTFT under 500ms to feel responsive, while a code completion tool requires under 100ms for seamless developer experience. TTFT grows linearly with prompt length because the attention mechanism must process the entire input sequence to create the KV cache before generation can begin.
 
@@ -68,12 +72,6 @@ Before exploring how to solve this tension, we need to understand how inference 
 **End-to-End Latency (E2EL)** spans from submitting a request to receiving the final token. This includes queuing time, network latency, prefill, and all token generation. For batch processing tasks like overnight report generation, even 30 seconds of E2EL may be acceptable. For interactive applications, anything over a few seconds feels broken.
 
 **Throughput** measured in tokens per second or requests per second quantifies how much work the system completes. Input throughput matters for document summarization where prompts contain thousands of tokens. Output throughput matters for creative writing tools generating long responses. Total system throughput increases with concurrent requests until GPU resources saturate, after which performance degrades.
-
-<figure id="metrics-timeline-viz" style="margin: 2rem 0;">
-  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
-    Interactive timeline showing how TTFT, TPOT, E2EL, and throughput metrics evolve as 5 concurrent requests progress. Use the slider or play button to scrub through time.
-  </figcaption>
-</figure>
 
 These metrics reveal fundamental tradeoffs. Maximizing throughput means using large batch sizes and shared compute resources, which increases latency for individual requests. Minimizing latency means small batches and dedicated resources, which leaves GPUs underutilized. Different workloads make different choices. A document summarization pipeline processing millions of articles overnight optimizes for throughput. A coding assistant providing real-time completions optimizes for TTFT. An AI customer service agent balances both to maintain conversation flow while serving many users.
 
