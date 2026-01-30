@@ -15,7 +15,7 @@ teaser: |
   <figure class="teaser">
     <div id="recon-stack-teaser"></div>
     <figcaption>
-      Hover over each layer to explore the RECON stack architecture for LLM inference.
+      Hover over each layer to explore the RECON framework architecture for LLM inference.
     </figcaption>
   </figure>
 acknowledgments: |
@@ -94,11 +94,11 @@ Different applications choose different operating points based on their economic
   </figcaption>
 </figure>
 
-This fundamental challenge drives the need for a purpose-built stack.
+This fundamental challenge drives the need for a purpose-built framework.
 
 ## What Happens During Inference
 
-Before diving into the stack architecture, let's ground ourselves in the fundamentals. What physically happens when you generate text?
+Before diving into the framework architecture, let's ground ourselves in the fundamentals. What physically happens when you generate text?
 
 ### The Autoregressive Process
 
@@ -132,14 +132,14 @@ Inference requires something new. Systems must batch dynamically as requests arr
 
 ## Introducing RECON for Inference
 
-Given these constraints of expensive stateful computation requiring both throughput and low latency, we need a specialized stack. This foundational article introduces RECON as follows.
+Given these constraints of expensive stateful computation requiring both throughput and low latency, we need a specialized framework. This foundational article introduces RECON as follows.
 
 **R**outing, **E**ngine, **C**ache, **O**rchestration, **N**odes.
 
 <figure>
   <div id="recon-stack-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
-    The RECON stack showing the five key components of an LLM inference system. Note: This represents logical layers, not literal top-to-bottom request flow. Each layer addresses a different optimization challenge.
+    The RECON framework showing the five key components of an LLM inference system. Note: This represents logical layers, not literal top-to-bottom request flow. Each layer addresses a different optimization challenge.
   </figcaption>
 </figure>
 
@@ -159,7 +159,7 @@ Each layer addresses a specific aspect of the inference challenge.
 
 ### Request Flow Through RECON
 
-Consider what happens when you send the prompt "Write a Python function to calculate fibonacci numbers" through the stack. This example is deliberately simplified to demonstrate how each layer contributes to serving a single request.
+Consider what happens when you send the prompt "Write a Python function to calculate fibonacci numbers" through the framework. This example is deliberately simplified to demonstrate how each layer contributes to serving a single request.
 
 **Routing** receives the request and checks replica status. The router notices the system prompt "You are a helpful coding assistant" appears in its prefix cache on replica 2 running Llama 3.1 70B. Despite replica 1 having slightly lower load, the router directs the request to replica 2 to reuse the cached system prompt and save 200ms of prefill time.
 
@@ -173,11 +173,11 @@ Consider what happens when you send the prompt "Write a Python function to calcu
 
 The complete request takes 180ms for first token (including the prefix cache hit) and 52ms per subsequent token, delivering the full response in approximately 2.6 seconds.
 
-### Understanding Stack Tradeoffs
+### Understanding Framework Tradeoffs
 
 Each layer presents multiple implementation choices with associated tradeoffs between latency and throughput, cost and performance. Layers interact with each other where routing decisions affect cache hit rates and orchestration choices affect where engines run and how they scale.
 
-No single "best" configuration exists. The optimal stack depends on your specific workload (chatbot versus batch processing versus agentic workflows), your constraints (budget, latency SLA, scale requirements), and your infrastructure (cloud versus on-premises, single-GPU versus cluster).
+No single "best" configuration exists. The optimal framework depends on your specific workload (chatbot versus batch processing versus agentic workflows), your constraints (budget, latency SLA, scale requirements), and your infrastructure (cloud versus on-premises, single-GPU versus cluster).
 
 The following sections provide deep dives into each layer, presenting the decision space and helping you reason about these tradeoffs.
 

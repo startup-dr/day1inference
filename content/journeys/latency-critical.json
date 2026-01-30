@@ -5,7 +5,7 @@
   "sections": [
     {
       "title": "Getting Started",
-      "description": "Start here to understand the fundamentals of the RECON stack and how it enables low-latency inference.",
+      "description": "Start here to understand the fundamentals of the RECON framework and how it enables low-latency inference.",
       "cards": [
         {
           "type": "overview",
@@ -17,7 +17,7 @@
     },
     {
       "title": "Deep Dives",
-      "description": "Explore each layer of the RECON stack to understand how to optimize every component for minimal latency.",
+      "description": "Explore each layer of the RECON framework to understand how to optimize every component for minimal latency.",
       "cards": [
         {
           "type": "article",
