@@ -43,7 +43,7 @@ On the other side sit real-time web applications. Consider Netflix, Google Searc
 
 LLM inference demands both paradigms simultaneously.
 
-<figure id="paradigm-comparison" style="margin: 2rem 0;">
+<figure id="paradigm-viz" style="margin: 2rem 0;">
   <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
     Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web, with only memory optimization as its unique constraint.
   </figcaption>
@@ -75,13 +75,21 @@ Before exploring how to solve this tension, we need to understand how inference 
 
 These metrics reveal fundamental tradeoffs. Maximizing throughput means using large batch sizes and shared compute resources, which increases latency for individual requests. Minimizing latency means small batches and dedicated resources, which leaves GPUs underutilized. Different workloads make different choices. A document summarization pipeline processing millions of articles overnight optimizes for throughput. A coding assistant providing real-time completions optimizes for TTFT. An AI customer service agent balances both to maintain conversation flow while serving many users.
 
-### Goodput as a Unified Metric
+### Goodput: Throughput Under Latency Constraints
 
-This tension gives rise to a new metric for inference systems.<d-cite key="distserve2024"></d-cite> Consider how traditional metrics fall short. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency measured as time to first token captures responsiveness but ignores efficiency.
+Traditional metrics create a false dichotomy. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency metrics like TTFT and TPOT capture responsiveness but ignore efficiency. These metrics suggest optimization must choose between speed and scale.
 
-Goodput provides a unified measure. It quantifies the maximum request rate the system can serve while meeting defined service-level objectives for both TTFT and TPOT. This represents the balance point where expensive GPU resources are used efficiently through high throughput and responses are delivered quickly enough for users through low latency while service-level objectives are met consistently.
+Goodput provides a unified measure.<d-cite key="distserve_blog"></d-cite> It quantifies the maximum request rate the system can sustain while meeting defined service-level objectives for both TTFT and TPOT. Rather than treating TTFT and TPOT as competing objectives, goodput treats them as constraints. The question becomes: how much throughput can the system deliver while guaranteeing that 95% of requests see TTFT under 300ms and TPOT under 50ms?
 
-Importantly, optimal goodput looks different for different applications. A summarization service might target 95% of requests with TTFT under 2 seconds and TPOT under 100ms, accepting longer waits for massive throughput gains. A chatbot might require 99% of requests with TTFT under 300ms and TPOT under 50ms, sacrificing some throughput for consistently fast responses. A coding agent might demand TTFT under 100ms even if that means serving fewer concurrent users. The infrastructure must adapt to these varying requirements rather than optimizing for a single operating point.
+This formulation exposes the real tradeoff in inference serving: utilization versus tail latency.<d-cite key="distserve2024"></d-cite> Systems can drive high throughput by pushing GPUs toward saturation with large batches and deep queues, but tail latency rises due to queueing delay and burst amplification. Systems can minimize latency by maintaining slack capacity everywhere, but utilization drops and cost per request explodes. Goodput measures where operators choose to sit on this curve.
+
+Different applications choose different operating points based on their economic and user experience requirements. A summarization service processing millions of documents overnight targets 95% of requests with TTFT under 2 seconds and TPOT under 100ms. This loose constraint allows high utilization and maximum throughput, accepting occasional slow requests as acceptable. A chatbot serving customer support requires 99% of requests with TTFT under 300ms and TPOT under 50ms. This moderate constraint balances utilization with consistent response times to maintain conversation flow. A coding assistant providing real-time completions demands 99.9% of requests with TTFT under 100ms and TPOT under 40ms. This tight constraint requires significant slack capacity and accepts lower utilization to guarantee instant feedback.
+
+<figure id="goodput-triangle-viz" style="margin: 2rem 0;">
+  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
+    Goodput operating points for different applications. Each use case defines SLO constraints on TTFT and TPOT, then maximizes throughput within those bounds. Tighter constraints require more resources and lower utilization.
+  </figcaption>
+</figure>
 
 This fundamental challenge drives the need for a purpose-built stack.
 
