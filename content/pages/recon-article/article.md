@@ -43,6 +43,12 @@ On the other side sit real-time web applications. Consider Netflix, Google Searc
 
 LLM inference demands both paradigms simultaneously.
 
+<figure id="paradigm-comparison" style="margin: 2rem 0;">
+  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
+    Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web, with only memory optimization as its unique constraint.
+  </figcaption>
+</figure>
+
 From the HPC side, inference inherits expensive hardware constraints where GPUs cost tens of thousands of dollars. Computation is stateful as the KV cache grows with each token generated. Operations are memory-bound where loading model weights dominates performance. Resource efficiency matters because idle GPU cycles represent lost money.
 
 From the web side, inference faces unpredictable request patterns where users do not schedule their prompts. Systems must be latency-sensitive because users will not wait 30 seconds for a response. Load is variable with 10x traffic differences between peak and off-hours. Elasticity becomes necessary because maintaining max capacity 24/7 is prohibitively expensive.
@@ -62,6 +68,12 @@ Before exploring how to solve this tension, we need to understand how inference 
 **End-to-End Latency (E2EL)** spans from submitting a request to receiving the final token. This includes queuing time, network latency, prefill, and all token generation. For batch processing tasks like overnight report generation, even 30 seconds of E2EL may be acceptable. For interactive applications, anything over a few seconds feels broken.
 
 **Throughput** measured in tokens per second or requests per second quantifies how much work the system completes. Input throughput matters for document summarization where prompts contain thousands of tokens. Output throughput matters for creative writing tools generating long responses. Total system throughput increases with concurrent requests until GPU resources saturate, after which performance degrades.
+
+<figure id="metrics-timeline-viz" style="margin: 2rem 0;">
+  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
+    Interactive timeline showing how TTFT, TPOT, E2EL, and throughput metrics evolve as 5 concurrent requests progress. Use the slider or play button to scrub through time.
+  </figcaption>
+</figure>
 
 These metrics reveal fundamental tradeoffs. Maximizing throughput means using large batch sizes and shared compute resources, which increases latency for individual requests. Minimizing latency means small batches and dedicated resources, which leaves GPUs underutilized. Different workloads make different choices. A document summarization pipeline processing millions of articles overnight optimizes for throughput. A coding assistant providing real-time completions optimizes for TTFT. An AI customer service agent balances both to maintain conversation flow while serving many users.
 
@@ -85,15 +97,19 @@ LLMs generate text one token at a time where each token depends on all previous 
 
 The prefill phase processes the entire prompt. The system loads model weights (tens of GBs) into GPU memory, runs a forward pass over all prompt tokens, computes Key-Value (KV) pairs for each token, stores KV pairs in cache, and samples the first output token.
 
-The decode phase generates each subsequent token. For every new token, the system loads model weights again (yes, every time), runs a forward pass with just the new token, reuses cached KV pairs from previous tokens, samples the next token, and repeats until done through EOS token, max length, or user stop.
+The decode phase generates each subsequent token. For every new token, weights are streamed from HBM where sustained memory bandwidth becomes the primary limiter. The system runs a forward pass with just the new token, reuses cached KV pairs from previous tokens, samples the next token, and repeats until done through EOS token, max length, or user stop.
 
 ### Why This Matters for Architecture
 
 Three critical characteristics emerge from this process.
 
-First, a memory bottleneck dominates performance. Loading model weights from memory (HBM to on-chip SRAM) often represents the slowest operation. For a 70B parameter model in FP16 format, approximately 140GB must move through the system. Modern GPUs provide memory bandwidth around 2 to 3 TB/s, meaning it takes roughly 50 to 70ms just to load weights. This operation repeats for every single token.
+First, a memory bottleneck dominates performance in the decode-dominated regime. Loading model weights from memory (HBM to on-chip SRAM) often represents the slowest operation. For a 70B parameter model in FP16 format, approximately 140GB must move through the system. On GPUs with memory bandwidth around 2 to 3 TB/s (such as A100), it takes roughly 50 to 70ms just to load weights, while newer H200 class parts with 4.8 TB/s bandwidth reduce this floor to around 30ms. This operation repeats for every single token during generation.
 
-Second, computation becomes stateful. The KV cache grows with sequence length. For a 70B model with 8K context, each token stores approximately 140KB of KV data. A full 8K context requires roughly 1.1GB per request. Supporting 100 concurrent users demands 110GB just for cache storage. Unlike web servers where you can restart anywhere, you cannot lose the KV cache mid-generation. This state must persist across all tokens in the sequence.
+Second, computation becomes stateful. The KV cache grows with sequence length. KV cache size per token depends on architecture details rather than parameter count alone:
+
+**KV bytes per token ≈ 2 × layers × kv_heads × head_dim × bytes_per_element**
+
+For 70B class architectures, this typically ranges from ~150 to 350 KB per token depending on KV head count and precision (FP16 versus FP8). An 8K context therefore requires roughly 1.2 to 2.8 GB per concurrent request. Supporting 100 concurrent users can demand 120 to 280 GB just for cache storage. Unlike web servers where you can restart anywhere, you cannot lose the KV cache mid-generation. This state must persist across all tokens in the sequence.
 
 Third, sequential dependency limits parallelism. You cannot generate token 10 without first generating tokens 1 through 9. This constraint prevents parallelism within a single request. The only way to increase throughput involves batching multiple requests together, which directly trades off with latency.
 
@@ -103,25 +119,25 @@ Third, sequential dependency limits parallelism. You cannot generate token 10 wi
 Prompt: "Explain quantum computing"
          ↓
     [PREFILL PHASE]
-    Load weights (50 to 70ms)
+    Load weights (30-70ms depending on GPU)
     Process "Explain quantum computing" 
     Generate KV cache (9 tokens)
     Sample first token: "Quantum"
          ↓
     [DECODE PHASE for Token 2]
-    Load weights (50 to 70ms)
+    Stream weights from HBM (30-70ms)
     Process "Quantum" + reuse cache
     Sample: "computing"
          ↓
     [DECODE PHASE for Token 3]
-    Load weights (50 to 70ms)
+    Stream weights from HBM (30-70ms)
     Process "computing" + reuse cache
     Sample: "uses"
          ↓
     ... (repeat 127 more times)
 ```
 
-Most time is spent loading weights. The actual computation (matrix multiplies, attention mechanisms) executes quickly. This is why inference is described as memory-bandwidth-bound rather than compute-bound.
+Most time is spent streaming weights from memory. The actual computation (matrix multiplies, attention mechanisms) executes quickly. This is why inference is described as memory-bandwidth-bound rather than compute-bound.
 
 ### Why Traditional Solutions Fail
 
@@ -166,15 +182,15 @@ Given these constraints of expensive stateful computation requiring both through
 
 Each layer addresses a specific aspect of the inference challenge.
 
-**Routing** provides intelligent load balancing for inference workloads. Unlike traditional web load balancing, inference routing must account for GPU state (model loaded, cache warm), request characteristics (prompt length, model selection), and current load. Requests with common system prompts should route to replicas with those prefixes already cached.
+**Routing** provides intelligent load balancing for inference workloads. Unlike traditional web load balancing, inference routing must account for GPU state (model loaded, cache warm), request characteristics (prompt length, model selection), and current load.<d-cite key="vllm_docs"></d-cite><d-cite key="deepspeed_inference"></d-cite> Requests with common system prompts should route to replicas with those prefixes already cached.
 
-**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching<d-cite key="orca2022"></d-cite>, paged attention<d-cite key="pagedattention2023"></d-cite>, kernel fusion, and quantization to maximize throughput while minimizing latency. Examples include vLLM, TensorRT-LLM, and llama.cpp.
+**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching<d-cite key="orca2022"></d-cite>, paged attention<d-cite key="pagedattention2023"></d-cite>, kernel fusion, and quantization to maximize throughput while minimizing latency.<d-cite key="tensorrt_llm"></d-cite> Examples include vLLM, TensorRT-LLM, and llama.cpp.
 
-**Cache** handles storage optimization across multiple levels. KV cache stores intermediate computations within requests. Prefix cache reuses common prompt beginnings across requests. Semantic and API caches reduce redundant processing for similar or identical inputs.
+**Cache** handles storage optimization across multiple levels. KV cache stores intermediate computations within requests.<d-cite key="attention_is_all_you_need"></d-cite> Prefix cache reuses common prompt beginnings across requests. Semantic and API caches reduce redundant processing for similar or identical inputs.<d-cite key="semantic_caching"></d-cite>
 
-**Orchestration** manages infrastructure deployment across nodes and models. This includes service placement, autoscaling, health monitoring, resource allocation, and connectivity management. Systems like Ray Serve and Kubernetes handle operational complexity so higher layers interact with a unified serving interface.
+**Orchestration** manages infrastructure deployment across nodes and models. This includes service placement, autoscaling, health monitoring, resource allocation, and connectivity management.<d-cite key="ray"></d-cite><d-cite key="ray_serve_docs"></d-cite><d-cite key="kubernetes_gpu"></d-cite> Systems like Ray Serve and Kubernetes handle operational complexity so higher layers interact with a unified serving interface.
 
-**Nodes** encompass the physical hardware and kernel-level software executing inference. Different GPUs offer vastly different capabilities (B200 versus L40S) affecting which models run and how many concurrent requests are served. Capacity planning balances dynamic cloud capacity against reserved commitments for both cost efficiency and availability.
+**Nodes** encompass the physical hardware and kernel-level software executing inference. Different GPUs offer vastly different capabilities (B200 versus L40S) affecting which models run and how many concurrent requests are served.<d-cite key="nvidia_hopper"></d-cite><d-cite key="nvidia_ada"></d-cite> Capacity planning balances dynamic cloud capacity against reserved commitments for both cost efficiency and availability.<d-cite key="aws_ml_inference"></d-cite><d-cite key="gcp_ml_inference"></d-cite>
 
 ### Request Flow Through RECON
 
