@@ -194,4 +194,3 @@ This article provides the foundation for understanding LLM inference architectur
 **Part 5: [Orchestration Layer](https://day1inference.com/orchestration.html)** details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
 
 **Part 6: [Nodes Layer](https://day1inference.com/nodes.html)** covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.
-<d-cite key="pagedattention2023"></d-cite>: PagedAttention manages KV cache memory using virtual memory and paging techniques inspired by operating systems, eliminating memory fragmentation and enabling efficient memory sharing. Source: [Efficient Memory Management for Large Language Model Serving with PagedAttention, SOSP 2023](https://arxiv.org/abs/2309.06180)
