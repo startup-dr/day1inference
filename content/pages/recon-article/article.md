@@ -119,32 +119,6 @@ For 70B class architectures, this typically ranges from ~150 to 350 KB per token
 
 Third, sequential dependency limits parallelism. You cannot generate token 10 without first generating tokens 1 through 9. This constraint prevents parallelism within a single request. The only way to increase throughput involves batching multiple requests together, which directly trades off with latency.
 
-### Token Generation Visualization
-
-```
-Prompt: "Explain quantum computing"
-         ↓
-    [PREFILL PHASE]
-    Load weights (30-70ms depending on GPU)
-    Process "Explain quantum computing" 
-    Generate KV cache (9 tokens)
-    Sample first token: "Quantum"
-         ↓
-    [DECODE PHASE for Token 2]
-    Stream weights from HBM (30-70ms)
-    Process "Quantum" + reuse cache
-    Sample: "computing"
-         ↓
-    [DECODE PHASE for Token 3]
-    Stream weights from HBM (30-70ms)
-    Process "computing" + reuse cache
-    Sample: "uses"
-         ↓
-    ... (repeat 127 more times)
-```
-
-Most time is spent streaming weights from memory. The actual computation (matrix multiplies, attention mechanisms) executes quickly. This is why inference is described as memory-bandwidth-bound rather than compute-bound.
-
 ### Why Traditional Solutions Fail
 
 Consider the HPC approach of batching 1000 requests and processing them together. The first user must wait for all 1000 requests to arrive, producing terrible latency.
@@ -161,29 +135,12 @@ Given these constraints of expensive stateful computation requiring both through
 
 ### Stack Architecture
 
-```
-┌────────────────────────────────────────────────┐
-│  ROUTING                                       │
-│  Load balancing for HPC calculations           │
-│  (Which replica? Which model?)                 │
-├────────────────────────────────────────────────┤
-│  ENGINE                                        │
-│  Inference optimizations & execution           │
-│  (vLLM, TensorRT-LLM, llama.cpp)              │
-├────────────────────────────────────────────────┤
-│  CACHE                                         │
-│  Storage optimization                          │
-│  (KV, prefix, API)                             │
-├────────────────────────────────────────────────┤
-│  ORCHESTRATION                                 │
-│  Cross-node management                         │
-│  (Ray, K8s, custom)                            │
-├────────────────────────────────────────────────┤
-│  NODES                                         │
-│  Physical hardware & networking                │
-│  (GPUs, memory hierarchy, interconnect)        │
-└────────────────────────────────────────────────┘
-```
+<figure id="recon-stack-viz" style="margin: 2rem 0;">
+  <figcaption style="text-align: center; margin-bottom: 1rem; font-style: italic;">
+    The RECON stack showing the five key components of an LLM inference system. Note: This represents logical layers, not literal top-to-bottom request flow. Each layer addresses a different optimization challenge.
+  </figcaption>
+</figure>
+
 ### Layer Functions
 
 Each layer addresses a specific aspect of the inference challenge.
