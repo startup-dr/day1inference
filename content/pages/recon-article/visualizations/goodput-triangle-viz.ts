@@ -49,8 +49,6 @@ export function initGoodputTriangle(): void {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = `
     width: 100%;
-    border-radius: 8px;
-    padding: 30px 20px;
   `;
 
   // Create main tradeoff slider visualization

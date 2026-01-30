@@ -13,8 +13,6 @@ export function initReconStack(): void {
   const wrapper = document.createElement('div');
   wrapper.style.cssText = `
     width: 100%;
-    border-radius: 8px;
-    padding: 30px 20px;
   `;
 
   // Create SVG

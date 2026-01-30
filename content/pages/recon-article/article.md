@@ -43,7 +43,7 @@ On the other side sit real-time web applications. Consider Netflix, Google Searc
 
 LLM inference demands both paradigms simultaneously.
 
-<figure style="margin-bottom: 2rem;">
+<figure>
   <div id="paradigm-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
     Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web.
@@ -60,7 +60,7 @@ This creates a unique tension. Pure HPC approaches fail because batching request
 
 Before exploring how to solve this tension, we need to understand how inference performance is measured. Different applications care about different aspects of the serving experience.
 
-<figure style="margin-bottom: 2rem;">
+<figure>
   <div id="metrics-timeline-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
     Interactive timeline showing how TTFT, TPOT, E2EL, and throughput metrics evolve as 5 concurrent requests progress. Use the slider or play button to scrub through time.
@@ -87,7 +87,7 @@ This formulation exposes the real tradeoff in inference serving: utilization ver
 
 Different applications choose different operating points based on their economic and user experience requirements. A summarization service processing millions of documents overnight targets 95% of requests with TTFT under 2 seconds and TPOT under 100ms. This loose constraint allows high utilization and maximum throughput, accepting occasional slow requests as acceptable. A chatbot serving customer support requires 99% of requests with TTFT under 300ms and TPOT under 50ms. This moderate constraint balances utilization with consistent response times to maintain conversation flow. A coding assistant providing real-time completions demands 99.9% of requests with TTFT under 100ms and TPOT under 40ms. This tight constraint requires significant slack capacity and accepts lower utilization to guarantee instant feedback.
 
-<figure style="margin-bottom: 2rem;">
+<figure>
   <div id="goodput-triangle-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
     Goodput operating points for different applications. Each use case defines SLO constraints on TTFT and TPOT, then maximizes throughput within those bounds. Tighter constraints require more resources and lower utilization.
@@ -136,9 +136,7 @@ Given these constraints of expensive stateful computation requiring both through
 
 **R**outing, **E**ngine, **C**ache, **O**rchestration, **N**odes.
 
-### Stack Architecture
-
-<figure style="margin-bottom: 2rem;">
+<figure>
   <div id="recon-stack-viz" class="viz-container"></div>
   <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
     The RECON stack showing the five key components of an LLM inference system. Note: This represents logical layers, not literal top-to-bottom request flow. Each layer addresses a different optimization challenge.

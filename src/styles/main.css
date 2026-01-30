@@ -6,6 +6,11 @@ figcaption {
   text-align: center;
 }
 
+figure {
+  margin-top: 0 !important;
+  margin-bottom: 2rem;
+}
+
 .teaser {
   grid-column: screen;
   width: 100%;
