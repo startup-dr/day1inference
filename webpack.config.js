@@ -29,7 +29,7 @@ const getSearchHTML = (showBrowseLinks = true) => {
         ${showBrowseLinks ? `
         <div style="text-align: center; color: #666; font-size: 0.95rem;">
             Or <a href="/timeline.html" style="color: #007f80; text-decoration: none;">browse all content</a> 
-            or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON stack</a>.
+            or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON framework</a>.
         </div>
         ` : ''}
     `;
@@ -794,7 +794,7 @@ class GenerateIndexPlugin {
         <a href="/latency-critical.html" class="journey-card">
             <h2>⚡ Latency Critical</h2>
             <p>
-                Optimize for minimal latency. Understand performance metrics, RECON stack components, 
+                Optimize for minimal latency. Understand performance metrics, RECON framework components, 
                 and trade-offs between managed vs. unmanaged deployments.
             </p>
             <div class="arrow">Start journey →</div>

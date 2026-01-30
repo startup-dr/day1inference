@@ -1,5 +1,5 @@
 ---
-title: The RECON Stack for LLM Inference
+title: The RECON Framework for LLM Inference
 subtitle: Understanding the five layers of modern inference architecture
 category: foundations
 published: 2025-12-29
