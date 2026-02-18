@@ -9,16 +9,25 @@ d-article h6 {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif !important;
 }
 
+/* Body adjustment for fixed header */
+body {
+    padding-top: 68px; /* Height of the fixed nav */
+}
+
 /* Site Navigation */
 .site-nav {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     background: #232F3E;
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .nav-logo {
