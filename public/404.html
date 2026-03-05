@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+        // GitHub Pages SPA redirect
+        // This script handles clean URLs by redirecting /page to /page/index.html
+        // and also handles legacy .html URLs by removing the extension
+        
+        (function() {
+            var path = window.location.pathname;
+            var search = window.location.search;
+            var hash = window.location.hash;
+            
+            // Remove trailing slash if present (except for root)
+            if (path !== '/' && path.endsWith('/')) {
+                path = path.slice(0, -1);
+            }
+            
+            // If URL ends with .html, redirect to the clean URL
+            if (path.endsWith('.html')) {
+                var cleanPath = path.slice(0, -5); // Remove .html
+                window.location.replace(cleanPath + search + hash);
+                return;
+            }
+            
+            // For clean URLs that don't exist, try adding /index.html
+            // GitHub Pages will serve this 404.html, and we redirect to the proper path
+            if (!path.endsWith('/index.html') && path !== '/') {
+                window.location.replace(path + '/index.html' + search + hash);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+</body>
+</html>

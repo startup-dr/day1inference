@@ -28,8 +28,8 @@ const getSearchHTML = (showBrowseLinks = true) => {
         </div>
         ${showBrowseLinks ? `
         <div style="text-align: center; color: #666; font-size: 0.95rem;">
-            Or <a href="/timeline.html" style="color: #007f80; text-decoration: none;">browse all content</a> 
-            or read our <a href="/recon-article.html" style="color: #007f80; text-decoration: none;">foundational guide to the RECON framework</a>.
+            Or <a href="/timeline" style="color: #007f80; text-decoration: none;">browse all content</a> 
+            or read our <a href="/recon-article" style="color: #007f80; text-decoration: none;">foundational guide to the RECON framework</a>.
         </div>
         ` : ''}
     `;
@@ -253,7 +253,7 @@ const generateJourneyPage = (journeyData) => {
         </span>
     </a>
     <div class="nav-links">
-        <a href="/timeline.html">All Content</a>
+        <a href="/timeline">All Content</a>
         <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
@@ -437,7 +437,7 @@ d-byline {
         </span>
     </a>
     <div class="nav-links">
-        <a href="/timeline.html">All Content</a>
+        <a href="/timeline">All Content</a>
         <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
@@ -548,7 +548,7 @@ const generateIndex = () => {
                 category: parsed.data.category,
                 date: published,
                 displayDate: formattedDate,
-                url: urlPath + '.html',
+                url: '/' + urlPath,
                 image: imagePath,
                 content: plainText // Full content for search index
             });
@@ -574,7 +574,7 @@ class GenerateIndexPlugin {
                 const journeyName = fileName.replace(/^\d+-/, '');
                 const journeyHTML = generateJourneyPage(journeyData);
                 
-                compilation.assets[`${journeyName}.html`] = {
+                compilation.assets[`${journeyName}/index.html`] = {
                     source: () => journeyHTML,
                     size: () => journeyHTML.length
                 };
@@ -781,7 +781,7 @@ class GenerateIndexPlugin {
         </span>
     </a>
     <div class="nav-links">
-        <a href="/timeline.html">All Content</a>
+        <a href="/timeline">All Content</a>
         <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
@@ -811,7 +811,7 @@ class GenerateIndexPlugin {
                 
                 if (isAvailable) {
                     return `
-                        <a href="/${journeyName}.html" class="journey-card">
+                        <a href="/${journeyName}" class="journey-card">
                             <h2>${icon} ${journeyData.title}</h2>
                             <p>${journeyData.description}</p>
                             <div class="arrow">Start journey →</div>
@@ -881,7 +881,7 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
         </span>
     </a>
     <div class="nav-links">
-        <a href="/timeline.html">All Content</a>
+        <a href="/timeline">All Content</a>
         <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
     </div>
 </nav>
@@ -917,7 +917,7 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
                 size: () => indexHTML.length
             };
             
-            compilation.assets['timeline.html'] = {
+            compilation.assets['timeline/index.html'] = {
                 source: () => timelineHTML,
                 size: () => timelineHTML.length
             };
@@ -983,8 +983,8 @@ module.exports = {
                     to: ({ context, absoluteFilename }) => {
                         const relativePath = path.relative(path.join(context, 'content/pages'), absoluteFilename);
                         const outputPath = relativePath.endsWith('/article.md')
-                            ? path.dirname(relativePath) + '.html'
-                            : relativePath.replace('.md', '.html');
+                            ? path.dirname(relativePath) + '/index.html'
+                            : relativePath.replace('.md', '/index.html');
                         return outputPath;
                     },
                     transform: (content, absoluteFilename) => transformMarkdownWithFigures(content, absoluteFilename),
@@ -1006,6 +1006,7 @@ module.exports = {
                     noErrorOnMissing: true,
                 },
                 { from: "public/CNAME", to: "CNAME", noErrorOnMissing: true },
+                { from: "public/404.html", to: "404.html", noErrorOnMissing: true },
                 { from: "public/logo.svg", to: "logo.svg", noErrorOnMissing: true },
                 { from: "public/logo-icon.svg", to: "logo-icon.svg", noErrorOnMissing: true },
             ],
