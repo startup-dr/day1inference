@@ -185,12 +185,12 @@ The following sections provide deep dives into each layer, presenting the decisi
 
 This article provides the foundation for understanding LLM inference architecture. The following articles dive deep into each RECON layer with implementation details, optimization techniques, and practical examples.
 
-**Part 2: [Routing Layer](https://day1inference.com/routing.html)** explores intelligent load balancing strategies, cache-aware routing algorithms, and how to direct traffic across inference replicas to maximize both throughput and latency.
+**Part 2: Routing Layer** (coming soon) explores intelligent load balancing strategies, cache-aware routing algorithms, and how to direct traffic across inference replicas to maximize both throughput and latency.
 
-**Part 3: [Engine Layer](https://day1inference.com/engine.html)** examines inference runtimes like vLLM and TensorRT-LLM, covering continuous batching, paged attention, kernel optimizations, and how engines maximize GPU utilization.
+**Part 3: Engine Layer** (coming soon) examines inference runtimes like vLLM and TensorRT-LLM, covering continuous batching, paged attention, kernel optimizations, and how engines maximize GPU utilization.
 
-**Part 4: [Cache Layer](https://day1inference.com/cache.html)** analyzes KV caching, prefix caching, semantic caching, and API caching strategies that eliminate redundant computation and dramatically improve response times.
+**Part 4: Cache Layer** (coming soon) analyzes KV caching, prefix caching, semantic caching, and API caching strategies that eliminate redundant computation and dramatically improve response times.
 
-**Part 5: [Orchestration Layer](https://day1inference.com/orchestration.html)** details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
+**Part 5: Orchestration Layer** (coming soon) details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
 
-**Part 6: [Nodes Layer](https://day1inference.com/nodes.html)** covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.
+**Part 6: Nodes Layer** (coming soon) covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.

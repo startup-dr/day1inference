@@ -1,0 +1,14 @@
+/* Training Stack Explorer Styles */
+
+#training-stack-root {
+  min-height: 600px;
+  width: 100%;
+}
+
+.viz-container {
+  margin: 2rem 0;
+  width: 100%;
+}
+
+/* Ensure fonts load */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');

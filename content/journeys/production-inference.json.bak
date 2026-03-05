@@ -1,0 +1,71 @@
+{
+  "title": "Production Inference",
+  "subtitle": "Build globally distributed, highly available, and performant inference systems",
+  "description": "Master the ARC framework for deploying production-grade inference infrastructure that scales across regions and serves millions of users",
+  "sections": [
+    {
+      "title": "Getting Started",
+      "description": "Start here to understand the fundamentals of production inference and the ARC framework for building globally distributed systems.",
+      "cards": [
+        {
+          "type": "overview",
+          "status": "coming-soon",
+          "url": "",
+          "sourceType": "internal"
+        }
+      ]
+    },
+    {
+      "title": "Deep Dives",
+      "description": "Explore each component of the ARC framework to build resilient, performant, and globally distributed inference systems.",
+      "cards": [
+        {
+          "type": "article",
+          "title": "Availability",
+          "description": "Design patterns for high availability, fault tolerance, and disaster recovery in inference systems",
+          "status": "coming-soon",
+          "url": ""
+        },
+        {
+          "type": "article",
+          "title": "Routing",
+          "description": "Global traffic management, load balancing, and intelligent request routing strategies",
+          "status": "coming-soon",
+          "url": ""
+        },
+        {
+          "type": "article",
+          "title": "Capacity",
+          "description": "Capacity planning, autoscaling, and resource optimization for global inference fleets",
+          "status": "coming-soon",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "title": "Solutions",
+      "description": "Deploy production-ready global inference infrastructure with these reference architectures and tools.",
+      "cards": [
+        {
+          "type": "solution",
+          "title": "Mjolnir",
+          "description": "Multi-region inference orchestration and deployment framework",
+          "status": "coming-soon",
+          "url": ""
+        }
+      ]
+    },
+    {
+      "title": "Tools",
+      "description": "Interactive tools to simulate, calculate, and visualize global inference deployment scenarios.",
+      "cards": [
+        {
+          "type": "tool",
+          "status": "coming-soon",
+          "url": "",
+          "sourceType": "internal"
+        }
+      ]
+    }
+  ]
+}

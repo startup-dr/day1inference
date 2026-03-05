@@ -1,10 +1,13 @@
 ---
-title: The RECON Stack for LLM Inference
+title: The RECON Framework for LLM Inference
 subtitle: Understanding the five layers of modern inference architecture
 category: foundations
 published: 2025-12-29
+updated: 2026-01-21
 authors:
   - Kareem Abdol-Hamid
+reviewers:
+  - AWS ML Team
 toc: true
 image: ./assets/thumbnail.svg
 description: Understanding the five layers of modern inference architecture
@@ -12,7 +15,7 @@ teaser: |
   <figure class="teaser">
     <div id="recon-stack-teaser"></div>
     <figcaption>
-      Hover over each layer to explore the RECON stack architecture for LLM inference.
+      Hover over each layer to explore the RECON framework architecture for LLM inference.
     </figcaption>
   </figure>
 acknowledgments: |
@@ -40,6 +43,13 @@ On the other side sit real-time web applications. Consider Netflix, Google Searc
 
 LLM inference demands both paradigms simultaneously.
 
+<figure>
+  <div id="paradigm-viz" class="viz-container"></div>
+  <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
+    Hover over each paradigm to see which characteristics apply. Inference inherits from both HPC and Web.
+  </figcaption>
+</figure>
+
 From the HPC side, inference inherits expensive hardware constraints where GPUs cost tens of thousands of dollars. Computation is stateful as the KV cache grows with each token generated. Operations are memory-bound where loading model weights dominates performance. Resource efficiency matters because idle GPU cycles represent lost money.
 
 From the web side, inference faces unpredictable request patterns where users do not schedule their prompts. Systems must be latency-sensitive because users will not wait 30 seconds for a response. Load is variable with 10x traffic differences between peak and off-hours. Elasticity becomes necessary because maintaining max capacity 24/7 is prohibitively expensive.
@@ -48,9 +58,14 @@ This creates a unique tension. Pure HPC approaches fail because batching request
 
 ### Measuring Inference Performance
 
-{{fragment-inference-performance}}
-
 Before exploring how to solve this tension, we need to understand how inference performance is measured. Different applications care about different aspects of the serving experience.
+
+<figure>
+  <div id="metrics-timeline-viz" class="viz-container"></div>
+  <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
+    Interactive timeline showing how TTFT, TPOT, E2EL, and throughput metrics evolve as 5 concurrent requests progress. Use the slider or play button to scrub through time.
+  </figcaption>
+</figure>
 
 **Time to First Token (TTFT)** measures how long users wait before seeing any response. This metric captures the prefill phase where the entire prompt is processed. A chatbot needs TTFT under 500ms to feel responsive, while a code completion tool requires under 100ms for seamless developer experience. TTFT grows linearly with prompt length because the attention mechanism must process the entire input sequence to create the KV cache before generation can begin.
 
@@ -62,19 +77,28 @@ Before exploring how to solve this tension, we need to understand how inference 
 
 These metrics reveal fundamental tradeoffs. Maximizing throughput means using large batch sizes and shared compute resources, which increases latency for individual requests. Minimizing latency means small batches and dedicated resources, which leaves GPUs underutilized. Different workloads make different choices. A document summarization pipeline processing millions of articles overnight optimizes for throughput. A coding assistant providing real-time completions optimizes for TTFT. An AI customer service agent balances both to maintain conversation flow while serving many users.
 
-### Goodput as a Unified Metric
+### Goodput: Throughput Under Latency Constraints
 
-This tension gives rise to a new metric for inference systems.<d-cite key="distserve2024"></d-cite> Consider how traditional metrics fall short. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency measured as time to first token captures responsiveness but ignores efficiency.
+Traditional metrics create a false dichotomy. Throughput measured in tokens per second captures raw capacity but ignores user experience. Latency metrics like TTFT and TPOT capture responsiveness but ignore efficiency. These metrics suggest optimization must choose between speed and scale.
 
-Goodput provides a unified measure. It quantifies the maximum request rate the system can serve while meeting defined service-level objectives for both TTFT and TPOT. This represents the balance point where expensive GPU resources are used efficiently through high throughput and responses are delivered quickly enough for users through low latency while service-level objectives are met consistently.
+Goodput provides a unified measure.<d-cite key="distserve_blog"></d-cite> It quantifies the maximum request rate the system can sustain while meeting defined service-level objectives for both TTFT and TPOT. Rather than treating TTFT and TPOT as competing objectives, goodput treats them as constraints. The question becomes: how much throughput can the system deliver while guaranteeing that 95% of requests see TTFT under 300ms and TPOT under 50ms?
 
-Importantly, optimal goodput looks different for different applications. A summarization service might target 95% of requests with TTFT under 2 seconds and TPOT under 100ms, accepting longer waits for massive throughput gains. A chatbot might require 99% of requests with TTFT under 300ms and TPOT under 50ms, sacrificing some throughput for consistently fast responses. A coding agent might demand TTFT under 100ms even if that means serving fewer concurrent users. The infrastructure must adapt to these varying requirements rather than optimizing for a single operating point.
+This formulation exposes the real tradeoff in inference serving: utilization versus tail latency.<d-cite key="distserve2024"></d-cite> Systems can drive high throughput by pushing GPUs toward saturation with large batches and deep queues, but tail latency rises due to queueing delay and burst amplification. Systems can minimize latency by maintaining slack capacity everywhere, but utilization drops and cost per request explodes. Goodput measures where operators choose to sit on this curve.
 
-This fundamental challenge drives the need for a purpose-built stack.
+Different applications choose different operating points based on their economic and user experience requirements. A summarization service processing millions of documents overnight targets 95% of requests with TTFT under 2 seconds and TPOT under 100ms. This loose constraint allows high utilization and maximum throughput, accepting occasional slow requests as acceptable. A chatbot serving customer support requires 99% of requests with TTFT under 300ms and TPOT under 50ms. This moderate constraint balances utilization with consistent response times to maintain conversation flow. A coding assistant providing real-time completions demands 99.9% of requests with TTFT under 100ms and TPOT under 40ms. This tight constraint requires significant slack capacity and accepts lower utilization to guarantee instant feedback.
+
+<figure>
+  <div id="goodput-triangle-viz" class="viz-container"></div>
+  <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
+    Goodput operating points for different applications. Each use case defines SLO constraints on TTFT and TPOT, then maximizes throughput within those bounds. Tighter constraints require more resources and lower utilization.
+  </figcaption>
+</figure>
+
+This fundamental challenge drives the need for a purpose-built framework.
 
 ## What Happens During Inference
 
-Before diving into the stack architecture, let's ground ourselves in the fundamentals. What physically happens when you generate text?
+Before diving into the framework architecture, let's ground ourselves in the fundamentals. What physically happens when you generate text?
 
 ### The Autoregressive Process
 
@@ -82,43 +106,21 @@ LLMs generate text one token at a time where each token depends on all previous 
 
 The prefill phase processes the entire prompt. The system loads model weights (tens of GBs) into GPU memory, runs a forward pass over all prompt tokens, computes Key-Value (KV) pairs for each token, stores KV pairs in cache, and samples the first output token.
 
-The decode phase generates each subsequent token. For every new token, the system loads model weights again (yes, every time), runs a forward pass with just the new token, reuses cached KV pairs from previous tokens, samples the next token, and repeats until done through EOS token, max length, or user stop.
+The decode phase generates each subsequent token. For every new token, weights are streamed from HBM where sustained memory bandwidth becomes the primary limiter. The system runs a forward pass with just the new token, reuses cached KV pairs from previous tokens, samples the next token, and repeats until done through EOS token, max length, or user stop.
 
 ### Why This Matters for Architecture
 
 Three critical characteristics emerge from this process.
 
-First, a memory bottleneck dominates performance. Loading model weights from memory (HBM to on-chip SRAM) often represents the slowest operation. For a 70B parameter model in FP16 format, approximately 140GB must move through the system. Modern GPUs provide memory bandwidth around 2 to 3 TB/s, meaning it takes roughly 50 to 70ms just to load weights. This operation repeats for every single token.
+First, a memory bottleneck dominates performance in the decode-dominated regime. Loading model weights from memory (HBM to on-chip SRAM) often represents the slowest operation. For a 70B parameter model in FP16 format, approximately 140GB must move through the system. On GPUs with memory bandwidth around 2 to 3 TB/s (such as A100), it takes roughly 50 to 70ms just to load weights, while newer H200 class parts with 4.8 TB/s bandwidth reduce this floor to around 30ms. This operation repeats for every single token during generation.
 
-Second, computation becomes stateful. The KV cache grows with sequence length. For a 70B model with 8K context, each token stores approximately 140KB of KV data. A full 8K context requires roughly 1.1GB per request. Supporting 100 concurrent users demands 110GB just for cache storage. Unlike web servers where you can restart anywhere, you cannot lose the KV cache mid-generation. This state must persist across all tokens in the sequence.
+Second, computation becomes stateful. The KV cache grows with sequence length. KV cache size per token depends on architecture details rather than parameter count alone:
+
+**KV bytes per token ≈ 2 × layers × kv_heads × head_dim × bytes_per_element**
+
+For 70B class architectures, this typically ranges from ~150 to 350 KB per token depending on KV head count and precision (FP16 versus FP8). An 8K context therefore requires roughly 1.2 to 2.8 GB per concurrent request. Supporting 100 concurrent users can demand 120 to 280 GB just for cache storage. Unlike web servers where you can restart anywhere, you cannot lose the KV cache mid-generation. This state must persist across all tokens in the sequence.
 
 Third, sequential dependency limits parallelism. You cannot generate token 10 without first generating tokens 1 through 9. This constraint prevents parallelism within a single request. The only way to increase throughput involves batching multiple requests together, which directly trades off with latency.
-
-### Token Generation Visualization
-
-```
-Prompt: "Explain quantum computing"
-         ↓
-    [PREFILL PHASE]
-    Load weights (50 to 70ms)
-    Process "Explain quantum computing" 
-    Generate KV cache (9 tokens)
-    Sample first token: "Quantum"
-         ↓
-    [DECODE PHASE for Token 2]
-    Load weights (50 to 70ms)
-    Process "Quantum" + reuse cache
-    Sample: "computing"
-         ↓
-    [DECODE PHASE for Token 3]
-    Load weights (50 to 70ms)
-    Process "computing" + reuse cache
-    Sample: "uses"
-         ↓
-    ... (repeat 127 more times)
-```
-
-Most time is spent loading weights. The actual computation (matrix multiplies, attention mechanisms) executes quickly. This is why inference is described as memory-bandwidth-bound rather than compute-bound.
 
 ### Why Traditional Solutions Fail
 
@@ -130,52 +132,34 @@ Inference requires something new. Systems must batch dynamically as requests arr
 
 ## Introducing RECON for Inference
 
-Given these constraints of expensive stateful computation requiring both throughput and low latency, we need a specialized stack. This foundational article introduces RECON as follows.
+Given these constraints of expensive stateful computation requiring both throughput and low latency, we need a specialized framework. This foundational article introduces RECON as follows.
 
 **R**outing, **E**ngine, **C**ache, **O**rchestration, **N**odes.
 
-### Stack Architecture
+<figure>
+  <div id="recon-stack-viz" class="viz-container"></div>
+  <figcaption style="text-align: center; margin-top: 1rem; font-style: italic;">
+    The RECON framework showing the five key components of an LLM inference system. Note: This represents logical layers, not literal top-to-bottom request flow. Each layer addresses a different optimization challenge.
+  </figcaption>
+</figure>
 
-```
-┌────────────────────────────────────────────────┐
-│  ROUTING                                       │
-│  Load balancing for HPC calculations           │
-│  (Which replica? Which model?)                 │
-├────────────────────────────────────────────────┤
-│  ENGINE                                        │
-│  Inference optimizations & execution           │
-│  (vLLM, TensorRT-LLM, llama.cpp)              │
-├────────────────────────────────────────────────┤
-│  CACHE                                         │
-│  Storage optimization                          │
-│  (KV, prefix, API)                             │
-├────────────────────────────────────────────────┤
-│  ORCHESTRATION                                 │
-│  Cross-node management                         │
-│  (Ray, K8s, custom)                            │
-├────────────────────────────────────────────────┤
-│  NODES                                         │
-│  Physical hardware & networking                │
-│  (GPUs, memory hierarchy, interconnect)        │
-└────────────────────────────────────────────────┘
-```
 ### Layer Functions
 
 Each layer addresses a specific aspect of the inference challenge.
 
-**Routing** provides intelligent load balancing for inference workloads. Unlike traditional web load balancing, inference routing must account for GPU state (model loaded, cache warm), request characteristics (prompt length, model selection), and current load. Requests with common system prompts should route to replicas with those prefixes already cached.
+**Routing** provides intelligent load balancing for inference workloads. Unlike traditional web load balancing, inference routing must account for GPU state (model loaded, cache warm), request characteristics (prompt length, model selection), and current load.<d-cite key="vllm_docs"></d-cite><d-cite key="deepspeed_inference"></d-cite> Requests with common system prompts should route to replicas with those prefixes already cached.
 
-**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching<d-cite key="orca2022"></d-cite>, paged attention<d-cite key="pagedattention2023"></d-cite>, kernel fusion, and quantization to maximize throughput while minimizing latency. Examples include vLLM, TensorRT-LLM, and llama.cpp.
+**Engine** serves as the optimized runtime where model execution happens. Modern engines implement continuous batching<d-cite key="orca2022"></d-cite>, paged attention<d-cite key="pagedattention2023"></d-cite>, kernel fusion, and quantization to maximize throughput while minimizing latency.<d-cite key="tensorrt_llm"></d-cite> Examples include vLLM, TensorRT-LLM, and llama.cpp.
 
-**Cache** handles storage optimization across multiple levels. KV cache stores intermediate computations within requests. Prefix cache reuses common prompt beginnings across requests. Semantic and API caches reduce redundant processing for similar or identical inputs.
+**Cache** handles storage optimization across multiple levels. KV cache stores intermediate computations within requests.<d-cite key="attention_is_all_you_need"></d-cite> Prefix cache reuses common prompt beginnings across requests. Semantic and API caches reduce redundant processing for similar or identical inputs.<d-cite key="semantic_caching"></d-cite>
 
-**Orchestration** manages infrastructure deployment across nodes and models. This includes service placement, autoscaling, health monitoring, resource allocation, and connectivity management. Systems like Ray Serve and Kubernetes handle operational complexity so higher layers interact with a unified serving interface.
+**Orchestration** manages infrastructure deployment across nodes and models. This includes service placement, autoscaling, health monitoring, resource allocation, and connectivity management.<d-cite key="ray"></d-cite><d-cite key="ray_serve_docs"></d-cite><d-cite key="kubernetes_gpu"></d-cite> Systems like Ray Serve and Kubernetes handle operational complexity so higher layers interact with a unified serving interface.
 
-**Nodes** encompass the physical hardware and kernel-level software executing inference. Different GPUs offer vastly different capabilities (B200 versus L40S) affecting which models run and how many concurrent requests are served. Capacity planning balances dynamic cloud capacity against reserved commitments for both cost efficiency and availability.
+**Nodes** encompass the physical hardware and kernel-level software executing inference. Different GPUs offer vastly different capabilities (B200 versus L40S) affecting which models run and how many concurrent requests are served.<d-cite key="nvidia_hopper"></d-cite><d-cite key="nvidia_ada"></d-cite> Capacity planning balances dynamic cloud capacity against reserved commitments for both cost efficiency and availability.<d-cite key="aws_ml_inference"></d-cite><d-cite key="gcp_ml_inference"></d-cite>
 
 ### Request Flow Through RECON
 
-Consider what happens when you send the prompt "Write a Python function to calculate fibonacci numbers" through the stack. This example is deliberately simplified to demonstrate how each layer contributes to serving a single request.
+Consider what happens when you send the prompt "Write a Python function to calculate fibonacci numbers" through the framework. This example is deliberately simplified to demonstrate how each layer contributes to serving a single request.
 
 **Routing** receives the request and checks replica status. The router notices the system prompt "You are a helpful coding assistant" appears in its prefix cache on replica 2 running Llama 3.1 70B. Despite replica 1 having slightly lower load, the router directs the request to replica 2 to reuse the cached system prompt and save 200ms of prefill time.
 
@@ -189,11 +173,11 @@ Consider what happens when you send the prompt "Write a Python function to calcu
 
 The complete request takes 180ms for first token (including the prefix cache hit) and 52ms per subsequent token, delivering the full response in approximately 2.6 seconds.
 
-### Understanding Stack Tradeoffs
+### Understanding Framework Tradeoffs
 
 Each layer presents multiple implementation choices with associated tradeoffs between latency and throughput, cost and performance. Layers interact with each other where routing decisions affect cache hit rates and orchestration choices affect where engines run and how they scale.
 
-No single "best" configuration exists. The optimal stack depends on your specific workload (chatbot versus batch processing versus agentic workflows), your constraints (budget, latency SLA, scale requirements), and your infrastructure (cloud versus on-premises, single-GPU versus cluster).
+No single "best" configuration exists. The optimal framework depends on your specific workload (chatbot versus batch processing versus agentic workflows), your constraints (budget, latency SLA, scale requirements), and your infrastructure (cloud versus on-premises, single-GPU versus cluster).
 
 The following sections provide deep dives into each layer, presenting the decision space and helping you reason about these tradeoffs.
 
@@ -210,4 +194,3 @@ This article provides the foundation for understanding LLM inference architectur
 **Part 5: [Orchestration Layer](https://day1inference.com/orchestration.html)** details service deployment, autoscaling policies, health monitoring, and how to manage distributed inference infrastructure across cloud environments.
 
 **Part 6: [Nodes Layer](https://day1inference.com/nodes.html)** covers GPU architectures, memory hierarchies, networking technologies, and capacity planning strategies for building cost-effective inference infrastructure.
-<d-cite key="pagedattention2023"></d-cite>: PagedAttention manages KV cache memory using virtual memory and paging techniques inspired by operating systems, eliminating memory fragmentation and enabling efficient memory sharing. Source: [Efficient Memory Management for Large Language Model Serving with PagedAttention, SOSP 2023](https://arxiv.org/abs/2309.06180)
