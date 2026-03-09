@@ -1,7 +1,7 @@
 import './styles/navigation.css';
 import './styles/main.css';
 
-console.log('Day 1 Inference, Distill template loaded');
+console.log('Day 1 Inference loaded');
 
 type VizModule = {
   [k: string]: unknown;

@@ -977,14 +977,6 @@ module.exports = {
                     },
                     noErrorOnMissing: true,
                 },
-                {
-                    from: "content/pages/**/bibliography.bib",
-                    to: ({ context, absoluteFilename }) => {
-                        const relativePath = path.relative(path.join(context, 'content/pages'), absoluteFilename);
-                        return relativePath;
-                    },
-                    noErrorOnMissing: true,
-                },
                 { from: "public/CNAME", to: "CNAME", noErrorOnMissing: true },
                 { from: "public/404.html", to: "404.html", noErrorOnMissing: true },
                 { from: "public/logo.svg", to: "logo.svg", noErrorOnMissing: true },
