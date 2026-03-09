@@ -375,6 +375,7 @@ const transformMarkdownWithFigures = (data, filepath) => {
   contain: style;
   overflow: hidden;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 0.8rem;
   line-height: 1.8em;
   padding: 1.5rem 0;
