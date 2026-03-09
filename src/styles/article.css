@@ -68,15 +68,13 @@
     font-size: 50px;
     line-height: 1.25em;
     font-weight: 700;
-    margin: 0 0 1rem 0;
+    margin: 0;
 }
 
 .article-header .subtitle {
-    font-size: 1.1rem;
-    color: rgba(0, 0, 0, 0.5);
     font-weight: 300;
-    margin: 0 0 0.5rem 0;
-    line-height: 1.6;
+    font-size: 1.2rem;
+    line-height: 1.55em;
 }
 
 .article-header .teaser {
@@ -130,10 +128,11 @@
     width: 100%;
 }
 
-.article-body figcaption {
-    font-size: 0.85rem;
-    color: rgba(0, 0, 0, 0.5);
-    margin-top: 0.5rem;
+.article-body figcaption,
+.article-header figcaption {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    line-height: 1.5em;
     text-align: center;
 }
 

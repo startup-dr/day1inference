@@ -374,9 +374,11 @@ const transformMarkdownWithFigures = (data, filepath) => {
 .custom-byline {
   contain: style;
   overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 0.8rem;
   line-height: 1.8em;
-  padding: 1.5rem 0;
+  padding: 0;
   min-height: 1.8em;
 }
 
@@ -385,8 +387,6 @@ const transformMarkdownWithFigures = (data, filepath) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 2rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 1.5rem 0;
 }
 
