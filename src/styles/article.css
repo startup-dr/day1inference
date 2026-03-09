@@ -53,7 +53,6 @@
 /* Article Header (replaces d-title) */
 .article-header {
     padding: 4rem 0 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .article-header > * {
@@ -195,10 +194,33 @@
     color: #007f80;
     cursor: pointer;
     text-decoration: none;
+    position: relative;
 }
 
 .citation-ref:hover {
     text-decoration: underline;
+}
+
+.citation-ref[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #232F3E;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    white-space: normal;
+    width: max-content;
+    max-width: 350px;
+    z-index: 100;
+    pointer-events: none;
+    vertical-align: baseline;
+    font-weight: normal;
+    margin-bottom: 4px;
 }
 
 /* Appendix (replaces d-appendix) */

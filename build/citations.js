@@ -281,6 +281,23 @@ function formatEntry(entry) {
 // HTML helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Produce a plain-text tooltip string for a citation hover.
+ */
+function formatTooltip(entry) {
+  const authors = formatAuthors(entry.author);
+  const title = entry.title || '';
+  const year = entry.year || '';
+  const venue = entry.journal || entry.booktitle || entry.publisher || entry.howpublished || '';
+  const parts = [];
+  if (authors) parts.push(authors);
+  if (title) parts.push(`"${title}"`);
+  if (venue && year) parts.push(`${venue}, ${year}`);
+  else if (venue) parts.push(venue);
+  else if (year) parts.push(year);
+  return parts.join('. ');
+}
+
 function escapeHtml(str) {
   return str
     .replace(/&/g, '&amp;')
@@ -344,7 +361,9 @@ function processCitations(html, bibtexContent) {
   const processedHtml = html.replace(dCiteRegex, (fullMatch, key) => {
     const num = keyToNumber[key];
     if (num === undefined) return '';
-    return `<a href="#bib-${key}" class="citation-ref">[${num}]</a>`;
+    const entry = entries[key];
+    const tooltip = entry ? formatTooltip(entry) : key;
+    return `<a href="#bib-${key}" class="citation-ref" data-tooltip="${escapeAttr(tooltip)}">[${num}]</a>`;
   });
 
   // Build bibliography HTML.
@@ -362,7 +381,7 @@ function processCitations(html, bibtexContent) {
   }
 
   const bibliographyHtml = citedKeys.length > 0
-    ? `<ol class="bibliography">\n${bibItems}</ol>`
+    ? `<ul class="bibliography-list">\n${bibItems}</ul>`
     : '';
 
   return { html: processedHtml, bibliographyHtml };
