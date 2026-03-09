@@ -1,6 +1,8 @@
-/* Body adjustment for fixed header */
+/* Global font and body */
 body {
     padding-top: 68px; /* Height of the fixed nav */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+    color: rgba(0, 0, 0, 0.8);
 }
 
 /* Site Navigation */
