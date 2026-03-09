@@ -22,7 +22,7 @@ jobs:
       - name: Collect traffic data
         run: node scripts/collect-traffic.js
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
 
       - name: Commit and push
         run: |
