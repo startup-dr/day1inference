@@ -1,0 +1,299 @@
+/* Article Layout Grid
+   Replaces Distill's base-grid system.
+   Named grid columns: screen, page, kicker, middle, text, gutter
+   Total content width: 60px * 12 columns + 32px * 11 gaps = 1072px
+   With 1fr margins on each side for centering.
+*/
+
+.base-grid,
+.article-header,
+.article-body,
+.article-appendix {
+    display: grid;
+    grid-template-columns:
+        [screen-start] 1fr
+        [page-start kicker-start] 60px
+        [middle-start] 60px
+        [text-start kicker-end] 60px 60px 60px 60px 60px 60px 60px 60px
+        [text-end gutter-start] 60px
+        [middle-end] 60px
+        [page-end gutter-end] 1fr
+        [screen-end];
+    grid-column-gap: 32px;
+}
+
+/* Default: children span the text column */
+.article-body > *,
+.article-appendix > * {
+    grid-column: text;
+}
+
+/* Full-width elements */
+.article-body .fullscreen,
+.article-body .l-screen {
+    grid-column: screen;
+    width: 100%;
+}
+
+.article-body .l-page,
+.article-body .fullwidth {
+    grid-column: page;
+    width: 100%;
+}
+
+.article-body .l-middle {
+    grid-column: middle;
+}
+
+.article-body aside,
+.article-body .side {
+    grid-column: gutter;
+}
+
+/* Article Header (replaces d-title) */
+.article-header {
+    padding: 4rem 0 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.article-header > * {
+    grid-column: text;
+}
+
+.article-header h1 {
+    font-size: 50px;
+    line-height: 1.33em;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.article-header .subtitle {
+    font-size: 1.25rem;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 300;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.article-header .teaser {
+    grid-column: screen;
+    width: 100%;
+}
+
+/* Article Body (replaces d-article) */
+.article-body {
+    padding-top: 1.5rem;
+    color: rgba(0, 0, 0, 0.8);
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.article-body h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 2rem 0 1rem;
+    padding: 0;
+}
+
+.article-body h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 1.5rem 0 0.75rem;
+}
+
+.article-body h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 1rem 0 0.5rem;
+}
+
+.article-body p {
+    margin: 0 0 1rem 0;
+}
+
+.article-body blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.1);
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.article-body figure {
+    margin: 1.5rem 0;
+}
+
+.article-body figure img {
+    width: 100%;
+}
+
+.article-body figcaption {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.5);
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.article-body pre {
+    padding: 1rem;
+    background: #f7f7f7;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.article-body code {
+    font-size: 0.9em;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+}
+
+.article-body pre code {
+    background: none;
+    padding: 0;
+}
+
+.article-body table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.article-body th,
+.article-body td {
+    border: 1px solid #e0e0e0;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+}
+
+.article-body th {
+    background: #f7f7f7;
+    font-weight: 600;
+}
+
+.article-body a {
+    color: #007f80;
+    text-decoration: none;
+}
+
+.article-body a:hover {
+    text-decoration: underline;
+}
+
+/* Citations (inline) */
+.citation-ref {
+    font-size: 0.75em;
+    vertical-align: super;
+    line-height: 0;
+    color: #007f80;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.citation-ref:hover {
+    text-decoration: underline;
+}
+
+/* Appendix (replaces d-appendix) */
+.article-appendix {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.article-appendix > * {
+    grid-column: text;
+}
+
+.article-appendix h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 1.5rem 0 0.75rem;
+}
+
+/* Bibliography list */
+.bibliography-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bibliography-list li {
+    padding: 0.5rem 0;
+    padding-left: 2rem;
+    text-indent: -2rem;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 0.85rem;
+}
+
+.bibliography-list .bib-number {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.5);
+    margin-right: 0.25rem;
+}
+
+.bibliography-list a {
+    color: #007f80;
+    text-decoration: none;
+}
+
+.bibliography-list a:hover {
+    text-decoration: underline;
+}
+
+/* TOC */
+.toc-container {
+    grid-column: text;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.toc-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.toc-link {
+    display: block;
+    padding: 0.2rem 0;
+    color: rgba(0, 0, 0, 0.7);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.toc-link:hover {
+    color: #007f80;
+}
+
+.toc-link.toc-3 {
+    padding-left: 1rem;
+    font-size: 0.85rem;
+}
+
+/* Typography - system fonts (replaces Distill font loading) */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+.article-header h1,
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4,
+.article-body h5,
+.article-body h6 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+}
