@@ -7,6 +7,7 @@ const fs = require("fs");
 const markdown = require("markdown-it")({ html: true });
 const matter = require("gray-matter");
 const glob = require("glob");
+const { processCitations } = require('./build/citations');
 
 const PAGES_PATH = "content/pages";
 const JOURNEYS_PATH = "content/journeys";
@@ -140,7 +141,7 @@ const generateJourneyPage = (journeyData) => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://distill.pub/template.v2.js"></script>
+<title>${journeyData.title} - Day 1 Inference</title>
 <link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
 <style>
 .section-cards {
@@ -245,13 +246,6 @@ const generateJourneyPage = (journeyData) => {
 </head>
 <body>
 
-<d-front-matter>
-<script type="text/json">{
-  "title": "${journeyData.title}",
-  "description": "${journeyData.description}"
-}</script>
-</d-front-matter>
-
 <nav class="site-nav">
     <a href="/" class="nav-logo">
         <img src="/logo.svg" alt="Day 1 Inference" />
@@ -321,7 +315,11 @@ const transformMarkdownWithFigures = (data, filepath) => {
         const id = cleanText.toLowerCase().replace(/[^\w]+/g, '-');
         return `<h${level} id="${id}">${text}</h${level}>`;
     });
-    
+
+    // Process citations through build-time processor
+    const bibContent = hasBibFile ? fs.readFileSync(bibPath, 'utf8') : '';
+    const { html: processedHtml, bibliographyHtml } = processCitations(bodyHtmlWithIds, bibContent);
+
     const authors = parsed.data.authors || [];
     const reviewers = parsed.data.reviewers || [];
     const subtitle = parsed.data.subtitle || '';
@@ -373,11 +371,6 @@ const transformMarkdownWithFigures = (data, filepath) => {
 </div>
 
 <style>
-/* Hide any auto-generated d-byline elements */
-d-byline {
-  display: none !important;
-}
-
 .custom-byline {
   contain: style;
   overflow: hidden;
@@ -422,19 +415,12 @@ d-byline {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://distill.pub/template.v2.js"></script>
+<title>${parsed.data.title || 'Day 1 Inference'}</title>
+<meta name="description" content="${parsed.data.description || ''}">
 <link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+<link rel="stylesheet" href="/styles/article.css">
 </head>
 <body>
-
-<d-front-matter>
-<script type="text/json">{
-  "title": "${parsed.data.title || ''}",
-  "description": "${parsed.data.description || ''}",
-  ${parsed.data.date ? `"published": "${parsed.data.date}",` : ''}
-  "authors": [${(parsed.data.authors || []).map(a => `{"author": "${a}"}`).join(', ')}]
-}</script>
-</d-front-matter>
 
 <nav class="site-nav">
     <a href="/" class="nav-logo">
@@ -450,22 +436,22 @@ d-byline {
     </div>
 </nav>
 
-<d-title>
+<header class="article-header">
     <h1>${parsed.data.title || ''}</h1>
-    ${subtitle ? `<p>${subtitle}</p>` : ''}
+    ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
     ${teaser ? `\n\n${teaser}` : ''}
-</d-title>
+</header>
 ${bylineHTML}
 
-<d-article>
-${bodyHtmlWithIds}
-</d-article>
+<article class="article-body">
+${processedHtml}
+</article>
 
-<d-appendix>
-  <d-footnote-list></d-footnote-list>
-    <d-citation-list></d-citation-list>
-  <d-bibliography src="${path.basename(articleDir)}/bibliography.bib"></d-bibliography>
-</d-appendix>
+${bibliographyHtml ? `
+<section class="article-appendix">
+    ${bibliographyHtml}
+</section>
+` : ''}
 
 <script src="/main.bundle.js"></script>
 </body>`;
@@ -592,7 +578,8 @@ class GenerateIndexPlugin {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://distill.pub/template.v2.js"></script>
+<title>Day 1 Inference</title>
+<meta name="description" content="Choose your inference journey">
 <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
 <link rel="stylesheet" href="/styles/search.css">
 <style>
@@ -781,13 +768,6 @@ class GenerateIndexPlugin {
 </head>
 <body>
 
-<d-front-matter>
-<script type="text/json">{
-  "title": "Day 1 Inference",
-  "description": "Choose your inference journey - optimize for latency, scale, or accuracy"
-}</script>
-</d-front-matter>
-
 <nav class="site-nav">
     <a href="/" class="nav-logo">
         <img src="/logo.svg" alt="Day 1 Inference" />
@@ -866,19 +846,11 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://distill.pub/template.v2.js"></script>
+<title>Day 1 Inference - All Content</title>
 <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
 <link rel="stylesheet" href="/styles/search.css">
-<style>d-article { border-top: none; }</style>
 </head>
 <body>
-
-<d-front-matter>
-<script type="text/json">{
-  "title": "Day 1 Inference - All Content",
-  "description": "Machine learning foundations, guidances, and insights"
-}</script>
-</d-front-matter>
 
 <nav class="site-nav">
     <a href="/" class="nav-logo">
@@ -894,7 +866,7 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
     </div>
 </nav>
 
-<d-article>
+<main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
 <div style="max-width: 800px; padding: 0 2rem;">
     ${getSearchHTML(false)}
 </div>
@@ -908,7 +880,7 @@ ${articles.map(a => `
         ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image" />` : ''}
     </div>
 `).join('')}
-</d-article>
+</main>
 
 ${getSearchScript(JSON.stringify(articles.map(a => ({
     title: a.title,
