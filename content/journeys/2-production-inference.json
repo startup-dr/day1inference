@@ -2,41 +2,34 @@
   "title": "Production Scale Inference",
   "subtitle": "Build globally available and performant inference systems at scale",
   "description": "Master the architecture and operational practices needed to deploy LLM inference services that serve millions of users worldwide",
-  "status": "coming-soon",
+  "status": "available",
   "sections": [
     {
       "title": "Getting Started",
-      "description": "Start here to understand the fundamentals of production inference and the ARC framework for building globally distributed systems.",
+      "description": "Start here to understand the fundamentals of production inference and how to build globally distributed systems.",
       "cards": [
         {
           "type": "overview",
-          "status": "coming-soon",
-          "url": "",
-          "sourceType": "internal"
+          "sourceType": "internal",
+          "url": "/global-inference-serving",
+          "status": "available"
         }
       ]
     },
     {
       "title": "Deep Dives",
-      "description": "Explore each component of the ARC framework to build resilient, performant, and globally distributed inference systems.",
+      "description": "Explore each dimension of production-scale inference to build resilient, performant, and globally distributed systems.",
       "cards": [
         {
           "type": "article",
-          "title": "Availability",
-          "description": "Design patterns for high availability, fault tolerance, and disaster recovery in inference systems",
+          "title": "Multi-Region Inference",
+          "description": "Design patterns for high availability, fault tolerance, and disaster recovery across regions",
           "status": "coming-soon",
           "url": ""
         },
         {
           "type": "article",
-          "title": "Routing",
-          "description": "Global traffic management, load balancing, and intelligent request routing strategies",
-          "status": "coming-soon",
-          "url": ""
-        },
-        {
-          "type": "article",
-          "title": "Capacity",
+          "title": "How to Achieve Production Capacity",
           "description": "Capacity planning, autoscaling, and resource optimization for global inference fleets",
           "status": "coming-soon",
           "url": ""
@@ -49,7 +42,7 @@
       "cards": [
         {
           "type": "solution",
-          "title": "Mjolnir",
+          "title": "Multi-Region Inference Solution",
           "description": "Multi-region inference orchestration and deployment framework",
           "status": "coming-soon",
           "url": ""
@@ -62,9 +55,10 @@
       "cards": [
         {
           "type": "tool",
+          "title": "Production Scale Simulator",
+          "description": "Simulate and plan multi-region inference deployments",
           "status": "coming-soon",
-          "url": "",
-          "sourceType": "internal"
+          "url": ""
         }
       ]
     }

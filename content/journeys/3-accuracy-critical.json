@@ -1,17 +1,17 @@
 {
   "title": "Accuracy Critical Inference",
-  "subtitle": "Maximize model accuracy through fine-tuning, evaluation, and domain-specific optimization",
+  "subtitle": "Maximize model accuracy through evaluation, fine-tuning, and domain-specific optimization",
   "description": "Master the techniques to ensure your LLM inference delivers accurate, reliable results for your specific use case",
   "status": "coming-soon",
   "sections": [
     {
       "title": "Getting Started",
-      "description": "Foundation for optimizing model accuracy in production inference systems.",
+      "description": "Start here to understand the fundamentals of AI evaluation and how to measure and improve model accuracy in production.",
       "cards": [
         {
-          "type": "article",
-          "title": "Maximizing Inference Accuracy",
-          "description": "Strategies for maintaining and improving model accuracy in production",
+          "type": "overview",
+          "title": "Fundamentals of AI Evaluation",
+          "description": "Core concepts, frameworks, and strategies for evaluating AI systems in production",
           "status": "coming-soon",
           "url": ""
         }
@@ -19,26 +19,40 @@
     },
     {
       "title": "Deep Dives",
-      "description": "Advanced techniques for accuracy optimization and evaluation.",
+      "description": "Explore each aspect of the evaluation and accuracy optimization lifecycle.",
       "cards": [
         {
           "type": "article",
-          "title": "Fine-Tuning for Production",
-          "description": "Domain adaptation and task-specific optimization strategies",
+          "title": "Best Practices for AI Evaluations",
+          "description": "Proven methodologies and patterns for effective model evaluation",
           "status": "coming-soon",
           "url": ""
         },
         {
           "type": "article",
-          "title": "Evaluation Frameworks",
-          "description": "Measuring and validating model quality in production",
+          "title": "Benchmarking & Performance Metrics",
+          "description": "Selecting the right metrics and benchmarks for your inference use case",
           "status": "coming-soon",
           "url": ""
         },
         {
           "type": "article",
-          "title": "Prompt Engineering",
-          "description": "Systematic approaches to prompt optimization for accuracy",
+          "title": "Ground Truth Dataset Preparation",
+          "description": "Building high-quality evaluation datasets for reliable accuracy measurement",
+          "status": "coming-soon",
+          "url": ""
+        },
+        {
+          "type": "article",
+          "title": "Running the Evaluation",
+          "description": "End-to-end guide to executing evaluations across models and configurations",
+          "status": "coming-soon",
+          "url": ""
+        },
+        {
+          "type": "article",
+          "title": "Using Evaluation Results to Tune Your AI System",
+          "description": "Translating evaluation insights into actionable accuracy improvements",
           "status": "coming-soon",
           "url": ""
         }
@@ -46,12 +60,19 @@
     },
     {
       "title": "Solutions",
-      "description": "Tools and frameworks for maintaining accuracy in production systems.",
+      "description": "Tools and frameworks for evaluation and accuracy optimization at scale.",
       "cards": [
         {
           "type": "solution",
-          "title": "Accuracy Monitoring Pipeline",
-          "description": "Continuous evaluation and quality tracking for production inference",
+          "title": "Using Bedrock Model Evaluation Capabilities",
+          "description": "Leverage Amazon Bedrock's built-in evaluation tools for model quality assessment",
+          "status": "coming-soon",
+          "url": ""
+        },
+        {
+          "type": "solution",
+          "title": "Evaluations at Scale Using Amazon SageMaker",
+          "description": "Run large-scale model evaluations with SageMaker processing and pipelines",
           "status": "coming-soon",
           "url": ""
         }
@@ -63,6 +84,8 @@
       "cards": [
         {
           "type": "tool",
+          "title": "Accuracy Evaluation Dashboard",
+          "description": "Visualize and compare model accuracy across evaluation runs",
           "status": "coming-soon",
           "url": ""
         }

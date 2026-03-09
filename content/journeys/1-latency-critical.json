@@ -11,7 +11,7 @@
         {
           "type": "overview",
           "status": "available",
-          "url": "/recon-article.html",
+          "url": "/recon-article",
           "sourceType": "internal"
         }
       ]
@@ -85,7 +85,7 @@
         {
           "type": "tool",
           "status": "available",
-          "url": "/inference-visualizer.html",
+          "url": "/inference-visualizer",
           "sourceType": "internal"
         }
       ]

@@ -107,16 +107,14 @@ const generateJourneyPage = (journeyData) => {
             }
         }
         
-        const cardStyle = isComingSoon 
-            ? 'opacity: 0.5; cursor: not-allowed;' 
-            : '';
-        
-        const tag = isComingSoon ? 'div' : 'a';
-        const hrefAttr = (!isComingSoon && card.url) ? `href="${card.url}"` : '';
-        const targetAttr = (isExternal && !isComingSoon) ? 'target="_blank" rel="noopener"' : '';
-        
+        const cardStyle = '';
+        const tag = (card.url && !isComingSoon) ? 'a' : 'div';
+        const hrefAttr = (card.url && !isComingSoon) ? `href="${card.url}"` : '';
+        const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
+        const comingSoonClass = isComingSoon ? ' journey-content-card--coming-soon' : '';
+
         return `
-        <${tag} class="journey-content-card" ${hrefAttr} ${targetAttr} style="${cardStyle}">
+        <${tag} class="journey-content-card${comingSoonClass}" ${hrefAttr} ${targetAttr} style="${cardStyle}">
             <div class="card-header">
                 <span class="card-type" style="background: ${color};">${label}</span>
                 ${isComingSoon ? '<span class="coming-soon-badge">Coming Soon</span>' : ''}
@@ -162,10 +160,20 @@ const generateJourneyPage = (journeyData) => {
     display: block;
 }
 
-.journey-content-card:not([style*="cursor: not-allowed"]):hover {
+.journey-content-card:hover {
     border-color: #38ad87;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(56, 173, 135, 0.3);
+}
+
+.journey-content-card--coming-soon {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+}
+
+.journey-content-card--coming-soon .card-type {
+    background: #999 !important;
 }
 
 .card-header {
@@ -638,6 +646,14 @@ class GenerateIndexPlugin {
     gap: 0.75rem;
 }
 
+.journey-card--coming-soon {
+    opacity: 0.75;
+}
+
+.journey-card--coming-soon:hover {
+    opacity: 1;
+}
+
 @media (max-width: 1024px) {
     .journey-cards {
         grid-template-columns: 1fr;
@@ -809,25 +825,16 @@ class GenerateIndexPlugin {
                 const icon = journeyIcons[journeyName] || '📚';
                 const isAvailable = journeyData.status === 'available';
                 
-                if (isAvailable) {
-                    return `
-                        <a href="/${journeyName}" class="journey-card">
-                            <h2>${icon} ${journeyData.title}</h2>
-                            <p>${journeyData.description}</p>
-                            <div class="arrow">Start journey →</div>
-                        </a>
-                    `;
-                } else {
-                    return `
-                        <div class="journey-card" style="opacity: 0.6; cursor: not-allowed;">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                                <h2 style="margin: 0;">${icon} ${journeyData.title}</h2>
-                                <span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">COMING SOON</span>
+                return `
+                        <a href="/${journeyName}" class="journey-card${!isAvailable ? ' journey-card--coming-soon' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <h2 style="margin: 0 0 1rem 0;">${icon} ${journeyData.title}</h2>
+                                ${!isAvailable ? '<span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">COMING SOON</span>' : ''}
                             </div>
                             <p>${journeyData.description}</p>
-                        </div>
+                            <div class="arrow">${isAvailable ? 'Start journey' : 'Preview journey'} →</div>
+                        </a>
                     `;
-                }
             }).join('\n');
         })()}
     </div>
@@ -862,6 +869,7 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
 <script src="https://distill.pub/template.v2.js"></script>
 <link rel="icon" type="image/svg+xml" href="logo-icon.svg">
 <link rel="stylesheet" href="/styles/search.css">
+<style>d-article { border-top: none; }</style>
 </head>
 <body>
 
