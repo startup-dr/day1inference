@@ -60,6 +60,11 @@
     grid-column: text;
 }
 
+.article-header .teaser {
+    grid-column: screen;
+    width: 100%;
+}
+
 .article-header h1 {
     font-size: 50px;
     line-height: 1.33em;
