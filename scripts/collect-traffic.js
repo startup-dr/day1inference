@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const DATA_FILE = path.join(__dirname, '..', 'analytics', 'traffic-data.json');
 
 function gh(endpoint) {
-  const json = execSync(`gh api ${endpoint}`, { encoding: 'utf-8' });
+  const json = execFileSync('gh', ['api', endpoint], { encoding: 'utf-8' });
   return JSON.parse(json);
 }
 
@@ -25,7 +25,7 @@ function mergeTimestamped(existing, fresh) {
   return merged;
 }
 
-const repo = process.env.GITHUB_REPOSITORY || execSync('gh repo view --json nameWithOwner -q .nameWithOwner', { encoding: 'utf-8' }).trim();
+const repo = process.env.GITHUB_REPOSITORY || execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], { encoding: 'utf-8' }).trim();
 console.log(`Collecting traffic data for ${repo}...`);
 
 const data = loadExistingData();

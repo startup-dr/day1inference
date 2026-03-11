@@ -1,10 +1,16 @@
 // Site-wide search component
 // Usage: Call initSearch(articleIndex) with the article data
 
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 export function initSearch(articleIndex) {
     const searchInput = document.getElementById('site-search');
     const searchResults = document.getElementById('search-results');
-    
+
     if (!searchInput || !searchResults) {
         console.warn('Search elements not found');
         return;
@@ -72,7 +78,7 @@ export function initSearch(articleIndex) {
         });
         
         if (results.length === 0) {
-            searchResults.innerHTML = '<div class="search-result-item no-results">No articles found matching "' + query + '"</div>';
+            searchResults.innerHTML = `<div class="search-result-item no-results">No articles found matching "${escapeHtml(query)}"</div>`;
             searchResults.style.display = 'block';
             return;
         }
@@ -90,24 +96,24 @@ export function initSearch(articleIndex) {
                 if (context) {
                     contextHtml = `
                         <div class="search-result-context">
-                            ${context.before}<mark>${context.match}</mark>${context.after}
+                            ${escapeHtml(context.before)}<mark>${escapeHtml(context.match)}</mark>${escapeHtml(context.after)}
                         </div>
                     `;
                 }
             }
             
             return `
-                <a href="${article.url}" class="search-result-item">
-                    <div class="search-result-category">${article.category}</div>
-                    <div class="search-result-title">${article.title}</div>
-                    <div class="search-result-description">${article.description}</div>
+                <a href="${encodeURI(article.url)}" class="search-result-item">
+                    <div class="search-result-category">${escapeHtml(article.category)}</div>
+                    <div class="search-result-title">${escapeHtml(article.title)}</div>
+                    <div class="search-result-description">${escapeHtml(article.description)}</div>
                     ${contextHtml}
                 </a>
             `;
         }).join('');
         
         if (results.length > 5) {
-            searchResults.innerHTML += '<div class="search-result-item search-more">+ ' + (results.length - 5) + ' more results. <a href="/timeline.html">View all content</a></div>';
+            searchResults.innerHTML += `<div class="search-result-item search-more">${results.length - 5} more results. <a href="/timeline">View all content</a></div>`;
         }
         
         searchResults.style.display = 'block';
