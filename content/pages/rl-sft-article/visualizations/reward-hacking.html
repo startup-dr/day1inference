@@ -1,0 +1,46 @@
+<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
+<svg width="100%" viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Reward hacking dynamics</title>
+<desc>Line chart showing proxy reward rising monotonically while true reward peaks then declines. The divergence point is labeled as Goodhart's Law zone.</desc>
+<defs>
+  <marker id="d5-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<style>
+  .d5-axis { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; fill: #6b7280; }
+  .d5-label { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; }
+  .d5-title { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; }
+  .d5-note { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; fill: #6b7280; }
+</style>
+
+<!-- Axes -->
+<line x1="80" y1="300" x2="620" y2="300" stroke="#d1d5db" stroke-width="0.5" marker-end="url(#d5-arrow)"/>
+<line x1="80" y1="300" x2="80" y2="50" stroke="#d1d5db" stroke-width="0.5" marker-end="url(#d5-arrow)"/>
+
+<text class="d5-axis" x="350" y="330" text-anchor="middle">Optimization pressure (KL divergence from reference)</text>
+<text class="d5-axis" x="42" y="175" text-anchor="middle" transform="rotate(-90 42 175)">Reward score</text>
+
+<!-- Proxy reward line -->
+<path d="M100 270 Q200 240 280 200 Q380 150 480 110 Q540 85 600 65" fill="none" stroke="#185FA5" stroke-width="2"/>
+<text class="d5-label" x="608" y="60" fill="#185FA5">Proxy reward</text>
+
+<!-- True reward line -->
+<path d="M100 270 Q200 230 280 180 Q340 155 370 150 Q420 148 460 170 Q520 210 580 260" fill="none" stroke="#0F6E56" stroke-width="2"/>
+<text class="d5-label" x="588" y="264" fill="#0F6E56">True reward</text>
+
+<!-- Divergence zone -->
+<rect x="340" y="44" width="240" height="260" rx="0" fill="#F09595" opacity="0.08"/>
+<line x1="340" y1="44" x2="340" y2="304" stroke="#A32D2D" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+<!-- Annotation -->
+<text class="d5-title" x="460" y="350" text-anchor="middle" fill="#A32D2D">Goodhart's law zone</text>
+<text class="d5-note" x="460" y="366" text-anchor="middle">Optimizing the proxy hurts the real objective</text>
+
+<!-- Peak marker -->
+<circle cx="370" cy="150" r="4" fill="#0F6E56"/>
+<text class="d5-label" x="378" y="142" fill="#0F6E56">Peak true reward</text>
+
+</svg>
+</div>
