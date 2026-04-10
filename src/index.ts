@@ -1,7 +1,6 @@
 import './styles/navigation.css';
 import './styles/main.css';
 
-console.log('Day 1 Inference loaded');
 
 type VizModule = {
   [k: string]: unknown;
@@ -47,10 +46,6 @@ function autoDiscoverVisualizations(): void {
   const all = vizContext.keys() as string[];
   const selected = all.filter((k) => shouldLoad(k, pageKey));
 
-  console.log(
-    `Viz modules, found ${all.length}, selected ${selected.length}, pageKey="${pageKey}"`
-  );
-
   for (const key of selected) {
     try {
       const mod = vizContext(key) as VizModule;
@@ -62,7 +57,6 @@ function autoDiscoverVisualizations(): void {
       }
 
       for (const init of initializers) {
-        console.log(`Init viz, ${key}, ${init.name || '(anonymous)'}`);
         init();
       }
     } catch (e) {

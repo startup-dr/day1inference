@@ -17,7 +17,7 @@ yellow(){ printf '\033[1;33m%s\033[0m\n' "$*"; }
 green() { printf '\033[1;32m%s\033[0m\n' "$*"; }
 
 relpath() {
-  python3 -c "import os.path; print(os.path.relpath('$1', '$REPO_ROOT'))" 2>/dev/null || echo "$1"
+  python3 -c "import os.path, sys; print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$1" "$REPO_ROOT" 2>/dev/null || echo "$1"
 }
 
 # ─── C1: Stored XSS via Markdown HTML pass-through ───────────────────────────
