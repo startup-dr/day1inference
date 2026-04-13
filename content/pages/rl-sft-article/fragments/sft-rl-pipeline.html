@@ -1,0 +1,60 @@
+<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
+<svg width="100%" viewBox="0 0 680 260" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>SFT to RL pipeline</title>
+<desc>Three-stage pipeline showing how base model, SFT model, and RL-tuned model respond to the same ambiguous prompt, illustrating that SFT teaches format while RL teaches judgment.</desc>
+<defs>
+  <marker id="d2-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<style>
+  .d2-title { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; font-weight: 600; fill: #1a1a1a; }
+  .d2-prompt { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; fill: #6b7280; }
+  .d2-code { font-family: ui-monospace, 'SF Mono', monospace; font-size: 10.5px; fill: #4b5563; }
+  .d2-note { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; fill: #9ca3af; font-style: italic; }
+  .d2-step { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 600; }
+  .d2-summary { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; fill: #9ca3af; }
+</style>
+
+<!-- Prompt -->
+<text class="d2-prompt" x="340" y="20" text-anchor="middle">User: "Delete my old files"</text>
+
+<!-- BASE MODEL -->
+<text class="d2-title" x="108" y="56" text-anchor="middle">Base model</text>
+<rect x="28" y="68" rx="10" width="160" height="100" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5"/>
+<text class="d2-code" x="42" y="90">Sure! You can delete</text>
+<text class="d2-code" x="42" y="106">old files by going to</text>
+<text class="d2-code" x="42" y="122">Settings > Storage...</text>
+<text class="d2-note" x="108" y="156" text-anchor="middle">Helpful advice, no action</text>
+
+<!-- Arrow 1 -->
+<line x1="196" y1="118" x2="234" y2="118" stroke="#534AB7" stroke-width="1" marker-end="url(#d2-arrow)"/>
+<text class="d2-step" x="215" y="110" text-anchor="middle" fill="#534AB7">SFT</text>
+
+<!-- SFT MODEL -->
+<text class="d2-title" x="340" y="56" text-anchor="middle">SFT model</text>
+<rect x="242" y="68" rx="10" width="196" height="100" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5"/>
+<text class="d2-code" x="256" y="90">delete_files(</text>
+<text class="d2-code" x="256" y="106">  path="/*",</text>
+<text class="d2-code" x="256" y="122">  older_than="30d"</text>
+<text class="d2-code" x="256" y="138">)</text>
+<text class="d2-note" x="340" y="156" text-anchor="middle">Right format, dangerous guess</text>
+
+<!-- Arrow 2 -->
+<line x1="446" y1="118" x2="484" y2="118" stroke="#0F6E56" stroke-width="1" marker-end="url(#d2-arrow)"/>
+<text class="d2-step" x="465" y="110" text-anchor="middle" fill="#0F6E56">RL</text>
+
+<!-- RL MODEL -->
+<text class="d2-title" x="572" y="56" text-anchor="middle">RL-tuned model</text>
+<rect x="492" y="68" rx="10" width="160" height="100" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5"/>
+<text class="d2-code" x="506" y="90">Which folder? And</text>
+<text class="d2-code" x="506" y="106">what counts as "old"</text>
+<text class="d2-code" x="506" y="122">— 30 days, a year?</text>
+<text class="d2-note" x="572" y="156" text-anchor="middle">Learned to clarify first</text>
+
+<!-- Bottom summary -->
+<text class="d2-summary" x="340" y="228" text-anchor="middle">SFT learns the tool format · RL learns the judgment</text>
+
+</svg>
+</div>
