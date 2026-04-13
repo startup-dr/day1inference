@@ -1,4 +1,3 @@
-<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
 <svg width="100%" viewBox="0 0 680 420" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>SFT vs RL learning loop comparison</title>
 <desc>Side-by-side diagram showing SFT as a linear data-to-model pipeline versus RL as a generative loop with reward feedback.</desc>
@@ -70,4 +69,3 @@
 <text class="d1-sub" x="646" y="228" text-anchor="start">↻ loop</text>
 
 </svg>
-</div>

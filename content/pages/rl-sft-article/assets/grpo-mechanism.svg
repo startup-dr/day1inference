@@ -1,4 +1,3 @@
-<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
 <svg width="100%" viewBox="0 0 680 440" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>GRPO training step</title>
 <desc>A single prompt generates 8 candidate responses, each scored by a reward function. Scores above the group mean are reinforced, below are penalized. No critic network needed.</desc>
@@ -76,4 +75,3 @@
 <text class="d4-sm" x="340" y="436" text-anchor="middle">No critic network — the group is the baseline (unlike PPO)</text>
 
 </svg>
-</div>

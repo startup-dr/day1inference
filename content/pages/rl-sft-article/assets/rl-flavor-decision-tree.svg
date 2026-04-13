@@ -1,4 +1,3 @@
-<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
 <svg width="100%" viewBox="0 0 680 480" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>RL flavor decision tree</title>
 <desc>Flowchart guiding practitioners from verification function availability through preference data to the right RL method: RLVR, DPO, RLAIF, or RLHF.</desc>
@@ -87,4 +86,3 @@
 <circle cx="380" cy="456" r="3" fill="#A32D2D"/><text class="d3-legend" x="388" y="460">No</text>
 
 </svg>
-</div>
