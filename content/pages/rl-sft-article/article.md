@@ -22,7 +22,10 @@ The most dramatic demonstration of this came from OpenAI's o1 model (September 2
 
 This distinction matters more than it might first appear. It represents a shift from teaching by example to teaching by objective, and it unlocks categories of capability that imitation alone cannot reach.
 
-{{{fragment-sft-vs-rl-loop}}}
+<figure>
+  <img src="./assets/sft-vs-rl-loop.svg" alt="SFT vs RL learning loop comparison: SFT learns from fixed data in a single pass while RL generates candidates, scores them, and loops.">
+  <figcaption>SFT learns from fixed data in a single pass. RL generates candidates, scores them, and loops — discovering strategies that were never in the training data.</figcaption>
+</figure>
 
 ## Where RL changes what's possible
 
@@ -96,7 +99,10 @@ For some tasks, the reward is natural and easy to verify. A SQL query either ret
 
 But many real-world tasks don't have clean, verifiable reward signals. How do you score the quality of a long-form explanation? A persuasive essay? You can use human evaluators, but that's expensive and slow — far too slow for the thousands or millions of reward queries that RL training requires. You can train a reward model to approximate human judgment, but now you're optimizing against a proxy (not the signal itself), and the model will find and exploit gaps between the proxy and what you actually care about.
 
-{{{fragment-reward-hacking}}}
+<figure>
+  <img src="./assets/reward-hacking.svg" alt="Reward hacking dynamics: proxy reward rises monotonically while true reward peaks then declines past the Goodhart's Law divergence point.">
+  <figcaption>Reward hacking: the proxy reward keeps climbing while the true reward peaks and declines. Past the divergence point, more optimization makes the model worse.</figcaption>
+</figure>
 
 The reward hacking phenomenon is not an edge case: it's the expected outcome whenever the reward model is imperfect, which is always. Gao et al. formally characterized how optimizing too aggressively against a proxy reward model causes the *true* reward (as measured by humans or a verifiable function) to degrade — a relationship they showed follows predictable scaling laws (Gao et al., "Scaling Laws for Reward Model Overoptimization," ICML 2023). Documented examples include models trained with RLHF learning to produce verbose, hedging responses that score well with reward models but frustrate users; models exploiting formatting patterns (bullet points, confident tone) that correlate with higher scores without improving substance; and models that game length as a proxy for thoroughness (Singhal et al., 2023).
 
@@ -132,7 +138,10 @@ SFT's role in that pipeline is to narrow the policy space. A base pretrained mod
 
 RL then takes over from that narrowed starting point. Instead of exploring the entire space of possible outputs (most of which are garbage), the RL policy starts in a region where most candidate responses are at least structurally plausible. Exploration becomes productive rather than random. The model can try variations on valid approaches and learn which ones score higher, instead of spending its exploration budget discovering that outputting song lyrics earns zero reward.
 
-{{{fragment-sft-rl-pipeline}}}
+<figure>
+  <img src="./assets/sft-rl-pipeline.svg" alt="SFT to RL pipeline: the same ambiguous prompt through base model, SFT model, and RL-tuned model showing progression from advice to format to judgment.">
+  <figcaption>The same ambiguous prompt through three stages: the base model gives advice, SFT produces the right format but guesses dangerously, RL learns to ask for clarification.</figcaption>
+</figure>
 
 This pipeline was established early: InstructGPT (Ouyang et al., "Training Language Models to Follow Instructions with Human Feedback," NeurIPS 2022) demonstrated SFT → reward model → PPO as the canonical alignment recipe. Nearly every major alignment effort since has followed some variant of this approach.
 
@@ -175,7 +184,10 @@ For most teams, the decision tree is:
 3. If you need exploration beyond pre-collected data and can articulate clear evaluation criteria → **RLAIF** with a strong judge model and detailed rubrics.
 4. If quality judgments are inherently subjective and high-stakes (safety, tone, cultural sensitivity) → **RLHF** for tasks where fidelity justifies the annotation cost.
 
-{{{fragment-rl-flavor-decision-tree}}}
+<figure>
+  <img src="./assets/rl-flavor-decision-tree.svg" alt="RL flavor decision tree: flowchart from verification function availability through preference data to RLVR, DPO, RLAIF, or RLHF.">
+  <figcaption>Decision tree for choosing an RL flavor. Start with whether you can write a verification function, then follow the branches based on your data and evaluation capabilities.</figcaption>
+</figure>
 
 These approaches aren't mutually exclusive. A single training pipeline might use RLVR for structural correctness (did the model produce valid JSON?), DPO or RLAIF for quality dimensions (is the response helpful and well-phrased?), and combine multiple reward signals into a composite score.
 
@@ -197,7 +209,10 @@ Amazon SageMaker AI offers serverless model customization that removes the infra
 
 The service supports model families including Amazon Nova, Llama, Qwen, DeepSeek, and GPT-OSS, with techniques including Reinforcement Learning with Verifiable Rewards (RLVR), SFT, DPO, and RLAIF. For RLVR, you provide a dataset of prompts with ground-truth labels and a reward function that scores candidate responses against those labels. SageMaker AI generates multiple candidate responses per prompt (typically eight), scores each one, and uses Group Relative Policy Optimization (GRPO) to reinforce the responses that outperform the group average.
 
-{{{fragment-grpo-mechanism}}}
+<figure>
+  <img src="./assets/grpo-mechanism.svg" alt="GRPO training step: a single prompt generates 8 candidates, each scored by a reward function, with scores above the group mean reinforced and below penalized.">
+  <figcaption>GRPO in one step: generate candidates from a single prompt, score each with the reward function, then reinforce above-average and penalize below-average responses. No critic network needed.</figcaption>
+</figure>
 
 The practical workflow looks like this:
 

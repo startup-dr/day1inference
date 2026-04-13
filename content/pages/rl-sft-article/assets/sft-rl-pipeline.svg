@@ -1,4 +1,3 @@
-<div class="diagram-container" style="max-width:680px;margin:2rem auto;">
 <svg width="100%" viewBox="0 0 680 260" role="img" xmlns="http://www.w3.org/2000/svg">
 <title>SFT to RL pipeline</title>
 <desc>Three-stage pipeline showing how base model, SFT model, and RL-tuned model respond to the same ambiguous prompt, illustrating that SFT teaches format while RL teaches judgment.</desc>
@@ -57,4 +56,3 @@
 <text class="d2-summary" x="340" y="228" text-anchor="middle">SFT learns the tool format · RL learns the judgment</text>
 
 </svg>
-</div>
