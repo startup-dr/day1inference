@@ -1,8 +1,6 @@
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const Handlebars = require("handlebars");
 const fs = require("fs");
 const markdown = require("markdown-it")({ html: true });
 const matter = require("gray-matter");
@@ -11,6 +9,49 @@ const { processCitations } = require('./build/citations');
 
 const PAGES_PATH = "content/pages";
 const JOURNEYS_PATH = "content/journeys";
+
+// HTML escaping for build-time template interpolation
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function escapeAttr(str) {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+// Shared HTML fragments to avoid duplication across page templates
+const getNavHTML = () => `
+<nav class="site-nav">
+    <a href="/" class="nav-logo">
+        <img src="/logo.svg" alt="Day 1 Inference" />
+        Day 1 Inference
+        <span class="nav-logo-tagline">
+            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
+        </span>
+    </a>
+    <div class="nav-links">
+        <a href="/timeline">All Content</a>
+        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
+    </div>
+</nav>`;
+
+const getHeadHTML = (title, { description = '', extraLinks = '', extraStyles = '' } = {}) => `<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+${description ? `<meta name="description" content="${escapeAttr(description)}">` : ''}
+<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
+${extraLinks}${extraStyles}
+</head>`;
 
 // Reusable search component HTML
 const getSearchHTML = (showBrowseLinks = true) => {
@@ -110,27 +151,27 @@ const generateJourneyPage = (journeyData) => {
         
         const cardStyle = '';
         const tag = (card.url && !isComingSoon) ? 'a' : 'div';
-        const hrefAttr = (card.url && !isComingSoon) ? `href="${card.url}"` : '';
+        const hrefAttr = (card.url && !isComingSoon) ? `href="${escapeAttr(card.url)}"` : '';
         const targetAttr = isExternal ? 'target="_blank" rel="noopener"' : '';
         const comingSoonClass = isComingSoon ? ' journey-content-card--coming-soon' : '';
 
         return `
         <${tag} class="journey-content-card${comingSoonClass}" ${hrefAttr} ${targetAttr} style="${cardStyle}">
             <div class="card-header">
-                <span class="card-type" style="background: ${color};">${label}</span>
+                <span class="card-type" style="background: ${color};">${escapeHtml(label)}</span>
                 ${isComingSoon ? '<span class="coming-soon-badge">Coming Soon</span>' : ''}
                 ${isExternal && !isComingSoon ? '<span class="external-badge">↗</span>' : ''}
             </div>
-            <h3>${title}</h3>
-            <p>${description}</p>
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(description)}</p>
         </${tag}>
         `;
     };
     
     const sectionsHTML = journeyData.sections.map(section => `
         <div class="journey-section">
-            <h2 class="section-title">${section.title}</h2>
-            ${section.description ? `<p class="section-description">${section.description}</p>` : ''}
+            <h2 class="section-title">${escapeHtml(section.title)}</h2>
+            ${section.description ? `<p class="section-description">${escapeHtml(section.description)}</p>` : ''}
             <div class="section-cards">
                 ${section.cards.map(renderCard).join('')}
             </div>
@@ -138,12 +179,8 @@ const generateJourneyPage = (journeyData) => {
     `).join('');
     
     return `<!doctype html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${journeyData.title} - Day 1 Inference</title>
-<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
-<style>
+<html lang="en">
+${getHeadHTML(journeyData.title + ' - Day 1 Inference', { description: journeyData.description, extraStyles: `<style>
 .section-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -242,27 +279,14 @@ const generateJourneyPage = (journeyData) => {
         grid-template-columns: 1fr;
     }
 }
-</style>
-</head>
+</style>` })}
 <body>
 
-<nav class="site-nav">
-    <a href="/" class="nav-logo">
-        <img src="/logo.svg" alt="Day 1 Inference" />
-        Day 1 Inference
-        <span class="nav-logo-tagline">
-            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
-        </span>
-    </a>
-    <div class="nav-links">
-        <a href="/timeline">All Content</a>
-        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
-    </div>
-</nav>
+${getNavHTML()}
 
 <div style="text-align: center; padding: 3rem 2rem 1rem;">
-    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #232F3E;">${journeyData.title}</h1>
-    <p style="font-size: 1.1rem; color: #666; max-width: 800px; margin: 0 auto;">${journeyData.subtitle}</p>
+    <h1 style="font-size: 2.5rem; margin-bottom: 1rem; color: #232F3E;">${escapeHtml(journeyData.title)}</h1>
+    <p style="font-size: 1.1rem; color: #666; max-width: 800px; margin: 0 auto;">${escapeHtml(journeyData.subtitle)}</p>
 </div>
 
 <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem;">
@@ -276,7 +300,8 @@ const generateJourneyPage = (journeyData) => {
 </div>
 
 <script src="/main.bundle.js"></script>
-</body>`;
+</body>
+</html>`;
 };
 
 const transformMarkdownWithFigures = (data, filepath) => {
@@ -340,19 +365,18 @@ const transformMarkdownWithFigures = (data, filepath) => {
         timeZone: 'America/New_York'
     }) : '';
     
-    // Build custom byline HTML (completely replaces d-byline to avoid auto-generation)
-    // Uses Distill's base-grid system for consistent margins
+    // Build custom byline HTML (replaces Distill's auto-generated d-byline)
     const bylineHTML = `
 <div class="custom-byline base-grid">
   <div class="byline-content">
     <div class="byline-section">
       <h3>Authors</h3>
-      ${authors.map(author => `<p>${author}</p>`).join('')}
+      ${authors.map(author => `<p>${escapeHtml(author)}</p>`).join('')}
     </div>
     ${reviewers.length > 0 ? `
     <div class="byline-section">
       <h3>Reviewers</h3>
-      ${reviewers.map(reviewer => `<p>${reviewer}</p>`).join('')}
+      ${reviewers.map(reviewer => `<p>${escapeHtml(reviewer)}</p>`).join('')}
     </div>
     ` : ''}
     ${publishedDate ? `
@@ -369,78 +393,19 @@ const transformMarkdownWithFigures = (data, filepath) => {
     ` : ''}
   </div>
 </div>
-
-<style>
-.custom-byline {
-  contain: style;
-  overflow: hidden;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  font-size: 0.8rem;
-  line-height: 1.8em;
-  padding: 0;
-  min-height: 1.8em;
-}
-
-.byline-content {
-  grid-column: text;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 2rem;
-  padding: 1.5rem 0;
-}
-
-.byline-section h3 {
-  font-size: 0.6rem;
-  font-weight: 400;
-  color: rgba(0, 0, 0, 0.5);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0 0 0.5rem 0;
-}
-
-.byline-section p {
-  margin: 0.25rem 0;
-  color: rgba(0, 0, 0, 0.8);
-}
-
-@media (max-width: 768px) {
-  .byline-content {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-</style>
     `;
     
     return `<!doctype html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${parsed.data.title || 'Day 1 Inference'}</title>
-<meta name="description" content="${parsed.data.description || ''}">
-<link rel="icon" type="image/svg+xml" href="/logo-icon.svg">
-<link rel="stylesheet" href="/styles/article.css">
-</head>
+<html lang="en">
+${getHeadHTML(parsed.data.title || 'Day 1 Inference', { description: parsed.data.description || '', extraLinks: '<link rel="stylesheet" href="/styles/article.css">' })}
 <body>
 
-<nav class="site-nav">
-    <a href="/" class="nav-logo">
-        <img src="/logo.svg" alt="Day 1 Inference" />
-        Day 1 Inference
-        <span class="nav-logo-tagline">
-            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
-        </span>
-    </a>
-    <div class="nav-links">
-        <a href="/timeline">All Content</a>
-        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
-    </div>
-</nav>
+${getNavHTML()}
 
 <header class="article-header">
-    <h1>${parsed.data.title || ''}</h1>
-    ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
+    <h1>${escapeHtml(parsed.data.title || '')}</h1>
+    ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ''}
+    ${/* teaser is intentionally raw HTML from frontmatter */ ''}
     ${teaser ? `\n\n${teaser}` : ''}
 </header>
 ${bylineHTML}
@@ -456,7 +421,8 @@ ${bibliographyHtml ? `
 ` : ''}
 
 <script src="/main.bundle.js"></script>
-</body>`;
+</body>
+</html>`;
 };
 
 const generateIndex = () => {
@@ -577,14 +543,8 @@ class GenerateIndexPlugin {
             });
             
             const indexHTML = `<!doctype html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Day 1 Inference</title>
-<meta name="description" content="Choose your inference journey">
-<link rel="icon" type="image/svg+xml" href="logo-icon.svg">
-<link rel="stylesheet" href="/styles/search.css">
-<style>
+<html lang="en">
+${getHeadHTML('Day 1 Inference', { description: 'Choose your inference journey', extraLinks: '<link rel="stylesheet" href="/styles/search.css">', extraStyles: `<style>
 .journey-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -766,23 +726,10 @@ class GenerateIndexPlugin {
 .search-result-item.search-more a:hover {
     text-decoration: underline;
 }
-</style>
-</head>
+</style>` })}
 <body>
 
-<nav class="site-nav">
-    <a href="/" class="nav-logo">
-        <img src="/logo.svg" alt="Day 1 Inference" />
-        Day 1 Inference
-        <span class="nav-logo-tagline">
-            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
-        </span>
-    </a>
-    <div class="nav-links">
-        <a href="/timeline">All Content</a>
-        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
-    </div>
-</nav>
+${getNavHTML()}
 
 <div style="text-align: center; padding: 4rem 2rem 2rem;">
     <h1 style="font-size: 3rem; margin-bottom: 1rem; color: #232F3E;">Day 1 Inference</h1>
@@ -808,12 +755,12 @@ class GenerateIndexPlugin {
                 const isAvailable = journeyData.status === 'available';
                 
                 return `
-                        <a href="/${journeyName}" class="journey-card${!isAvailable ? ' journey-card--coming-soon' : ''}">
+                        <a href="/${escapeAttr(journeyName)}" class="journey-card${!isAvailable ? ' journey-card--coming-soon' : ''}">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <h2 style="margin: 0 0 1rem 0;">${icon} ${journeyData.title}</h2>
+                                <h2 style="margin: 0 0 1rem 0;">${icon} ${escapeHtml(journeyData.title)}</h2>
                                 ${!isAvailable ? '<span style="background: #e0e0e0; color: #666; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">COMING SOON</span>' : ''}
                             </div>
-                            <p>${journeyData.description}</p>
+                            <p>${escapeHtml(journeyData.description)}</p>
                             <div class="arrow">${isAvailable ? 'Start journey' : 'Preview journey'} →</div>
                         </a>
                     `;
@@ -841,32 +788,16 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
     content: a.content
 }))))}
 <script src="/main.bundle.js"></script>
-</body>`;
-            
+</body>
+</html>`;
+
             // Also generate timeline page
             const timelineHTML = `<!doctype html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Day 1 Inference - All Content</title>
-<link rel="icon" type="image/svg+xml" href="logo-icon.svg">
-<link rel="stylesheet" href="/styles/search.css">
-</head>
+<html lang="en">
+${getHeadHTML('Day 1 Inference - All Content', { description: 'Machine learning foundations, guidances, and insights', extraLinks: '<link rel="stylesheet" href="/styles/search.css">' })}
 <body>
 
-<nav class="site-nav">
-    <a href="/" class="nav-logo">
-        <img src="/logo.svg" alt="Day 1 Inference" />
-        Day 1 Inference
-        <span class="nav-logo-tagline">
-            <span class="powered-by">powered by</span> <span class="aws">AWS</span>
-        </span>
-    </a>
-    <div class="nav-links">
-        <a href="/timeline">All Content</a>
-        <a href="https://aws.amazon.com/blogs/machine-learning/" target="_blank" rel="noopener">Blogs ↗</a>
-    </div>
-</nav>
+${getNavHTML()}
 
 <main style="max-width: 900px; margin: 0 auto; padding: 2rem;">
 <div style="max-width: 800px; padding: 0 2rem;">
@@ -875,11 +806,11 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
 ${articles.map(a => `
     <div class="article-card">
         <div class="article-content">
-            <div class="article-meta">${a.category} • ${a.displayDate}</div>
-            <h3><a href="${a.url}">${a.title}</a></h3>
-            <p>${a.description}</p>
+            <div class="article-meta">${escapeHtml(a.category)} • ${escapeHtml(a.displayDate)}</div>
+            <h3><a href="${escapeAttr(a.url)}">${escapeHtml(a.title)}</a></h3>
+            <p>${escapeHtml(a.description)}</p>
         </div>
-        ${a.image ? `<img src="${a.image}" alt="${a.title}" class="article-image" />` : ''}
+        ${a.image ? `<img src="${escapeAttr(a.image)}" alt="${escapeAttr(a.title)}" class="article-image" />` : ''}
     </div>
 `).join('')}
 </main>
@@ -892,13 +823,14 @@ ${getSearchScript(JSON.stringify(articles.map(a => ({
     content: a.content
 }))))}
 <script src="/main.bundle.js"></script>
-</body>`;
-            
+</body>
+</html>`;
+
             compilation.assets['index.html'] = {
                 source: () => indexHTML,
                 size: () => indexHTML.length
             };
-            
+
             compilation.assets['timeline/index.html'] = {
                 source: () => timelineHTML,
                 size: () => timelineHTML.length
