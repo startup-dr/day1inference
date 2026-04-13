@@ -1,7 +1,7 @@
 ---
 title: RL as an SFT Breakthrough
 subtitle: Why reinforcement learning unlocks capabilities that supervised fine-tuning alone cannot reach
-category: blogs
+category: guidances
 published: 2026-04-10
 updated: 2026-04-10
 authors:
