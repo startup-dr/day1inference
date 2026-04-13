@@ -13,7 +13,7 @@
  * and per-GPU state including role assignment for disaggregated mode.
  */
 
-import { getProfile, GPU_SPECS } from './benchmarkData';
+import { getProfile, GPU_SPECS } from './benchmarkData.js';
 
 // ── Request status constants ───────────────────────────────────────
 
@@ -213,24 +213,19 @@ export class VLLMEngine {
 
   _schedule() {
     const c = this._config;
-    const batchBudget = c.maxNumSeqs;
+    const maxPerGPU = c.continuousBatching ? c.maxNumSeqs : 1;
 
-    if (c.continuousBatching) {
-      // With continuous batching: mix decode + prefill up to maxNumSeqs
-      this._scheduleDecodeRequests(batchBudget);
-      const decodeCount = this._runningQueue.filter(r => r.status === Status.DECODING).length;
-      const remaining = batchBudget - decodeCount;
-      if (remaining > 0) {
-        this._schedulePrefillRequests(remaining);
-      }
-    } else {
-      // Without continuous batching: only one type per step, decode has priority
-      const hasDecoding = this._runningQueue.some(r => r.status === Status.DECODING);
-      if (hasDecoding) {
-        this._scheduleDecodeRequests(batchBudget);
-      } else {
-        this._schedulePrefillRequests(batchBudget);
-      }
+    // Decode first: all running decode requests get their step (no cap —
+    // they already have GPU slots, this just allocates the next KV block).
+    this._scheduleDecodeRequests();
+
+    // Prefill: fill remaining GPU capacity with new requests.
+    const prefillBudget = this._gpus.reduce((sum, gpu) => {
+      return sum + Math.max(0, maxPerGPU - gpu.activeRequests.length);
+    }, 0);
+
+    if (prefillBudget > 0) {
+      this._schedulePrefillRequests(prefillBudget);
     }
   }
 
@@ -238,16 +233,13 @@ export class VLLMEngine {
    * Schedule decode requests — each already-running decode request needs
    * 1 token worth of KV blocks for this step.
    */
-  _scheduleDecodeRequests(budget) {
-    let count = 0;
+  _scheduleDecodeRequests() {
     const evicted = [];
 
     for (const req of this._runningQueue) {
       if (req.status !== Status.DECODING) continue;
-      if (count >= budget) break;
 
       // Each decode step needs 1 additional token stored in KV cache.
-      // Check if we need a new block (current blocks may have capacity).
       const totalTokens = req.contextLength + req.tokensGenerated + 1;
       const blocksNeeded = blocksForContext(totalTokens);
       const extraBlocks = blocksNeeded - req._blocksAllocated;
@@ -256,13 +248,11 @@ export class VLLMEngine {
         const gpu = this._gpus[req.gpuId];
         const allocated = this._allocateBlocks(req.id, extraBlocks, gpu);
         if (allocated < extraBlocks) {
-          // Cannot allocate — preempt (evict) this request
           evicted.push(req);
           continue;
         }
         req._blocksAllocated = blocksNeeded;
       }
-      count++;
     }
 
     // Evicted requests go back to waiting queue
@@ -334,22 +324,36 @@ export class VLLMEngine {
 
   _execute() {
     const c = this._config;
+    const transferIds = new Set();
+
+    // Prefill budget: how many input tokens one GPU processes per step.
+    // Longer contexts take more steps (chunked prefill).
+    // Default: 2048 tokens/step — a 4K context takes 2 prefill steps.
+    const prefillTokensPerStep = 2048;
 
     for (const req of this._runningQueue) {
       if (req.status === Status.PREFILLING) {
-        // Prefill: process all input tokens → produce 1st output token
-        req.tokensGenerated = 1;
-        // After prefill, transition to DECODING (or transfer in disaggregated mode)
-        if (c.disaggregated) {
-          // Queue for transfer to decode GPU
-          this._pendingDecodeTransfers.push(req);
-        } else {
-          req.status = Status.DECODING;
+        // Track prefill progress in tokens processed
+        req._prefillTokensDone = (req._prefillTokensDone || 0) + prefillTokensPerStep;
+
+        if (req._prefillTokensDone >= req.contextLength) {
+          // Prefill complete → produce first output token
+          req.tokensGenerated = 1;
+          if (c.disaggregated) {
+            this._pendingDecodeTransfers.push(req);
+            transferIds.add(req.id);
+          } else {
+            req.status = Status.DECODING;
+          }
         }
+        // else: still prefilling (chunked), stays PREFILLING for next step
       } else if (req.status === Status.DECODING) {
-        // Decode: generate 1 token
         req.tokensGenerated++;
       }
+    }
+
+    if (transferIds.size > 0) {
+      this._runningQueue = this._runningQueue.filter(r => !transferIds.has(r.id));
     }
   }
 
@@ -370,28 +374,31 @@ export class VLLMEngine {
     const runningCount = this._runningQueue.length;
     const waitingCount = this._waitingQueue.length;
 
-    // GPU load: fraction of maxNumSeqs in use across GPUs
-    let totalActive = 0;
-    for (const gpu of this._gpus) {
-      totalActive += gpu.activeRequests.length;
-    }
+    // GPU load: each active request uses gpuUtilization% of compute, capped at 100%
     const gpuLoad = this._gpus.length > 0
-      ? (totalActive / (this._gpus.length * c.maxNumSeqs)) * 100
+      ? this._gpus.reduce((sum, gpu) =>
+          sum + Math.min(gpu.activeRequests.length * c.gpuUtilization, 100),
+        0) / this._gpus.length
       : 0;
 
     // KV cache stats
     const kvStats = this._getKVStats();
+
+    // TTFT scales roughly linearly with context length.
+    // Benchmark profiles were measured at ~256-512 token contexts.
+    const baseContext = 512;
+    const contextScale = Math.max(1, c.contextLength / baseContext);
+    const scaledTtft = profile ? Math.round(profile.ttftMs * contextScale) : 0;
+    const tpotMs = profile ? profile.tpotMs : 0;
 
     this._metrics = {
       throughput:         Math.round(avgCompleted * 100) / 100,
       batchSize:          runningCount,
       waitingCount,
       runningCount,
-      ttftMs:             profile ? profile.ttftMs : 0,
-      tpotMs:             profile ? profile.tpotMs : 0,
-      estimatedLatencyMs: profile
-        ? profile.ttftMs + profile.tpotMs * (c.outputTokens - 1)
-        : 0,
+      ttftMs:             scaledTtft,
+      tpotMs,
+      estimatedLatencyMs: scaledTtft + Math.round(tpotMs * (c.outputTokens - 1)),
       gpuLoad:            Math.round(gpuLoad * 100) / 100,
       completedTotal:     this._completedRequests || 0,
       kvCacheUsage:       kvStats.totalBlocks > 0
@@ -445,10 +452,11 @@ export class VLLMEngine {
     }
 
     // Build list of GPUs with the right role and capacity
+    const maxPerGPU = c.continuousBatching ? c.maxNumSeqs : 1;
     const candidates = [];
     for (const gpu of this._gpus) {
       if (gpu.role !== targetRole) continue;
-      if (gpu.activeRequests.length >= c.maxNumSeqs) continue;
+      if (gpu.activeRequests.length >= maxPerGPU) continue;
       candidates.push(gpu);
     }
 
@@ -473,16 +481,9 @@ export class VLLMEngine {
     return candidates[idx].id;
   }
 
-  /** Check if a GPU holds KV cache blocks for a given session. */
+  /** Check if a GPU holds KV cache for a given session. O(1). */
   _gpuHasSession(gpu, sessionId) {
-    const gpuBlocks = this._kvBlocks.filter(
-      b => b.allocated && b.gpuId === gpu.id
-    );
-    // Find any request on this GPU's blocks with matching sessionId
-    for (const b of gpuBlocks) {
-      if (b.sessionId === sessionId) return true;
-    }
-    return false;
+    return gpu.kvSessions.has(sessionId);
   }
 
   /** Remove a request from its GPU's active list. */
@@ -497,71 +498,61 @@ export class VLLMEngine {
 
   _initKVCache() {
     const c = this._config;
-    const blocksPerGPU = calcBlockCount(c.gpuMemoryGB, c.gpuUtilization, c.pagedAttention);
+    this._blocksPerGPU = calcBlockCount(c.gpuMemoryGB, c.gpuUtilization, c.pagedAttention);
 
-    this._kvBlocks = [];
-    let blockId = 0;
+    // Per-GPU KV cache: just counters + per-request tracking (no giant array)
     for (const gpu of this._gpus) {
-      for (let i = 0; i < blocksPerGPU; i++) {
-        this._kvBlocks.push({
-          id:        blockId++,
-          gpuId:     gpu.id,
-          allocated: false,
-          requestId: null,
-          sessionId: null,
-          hash:      null,
-        });
-      }
+      gpu.kvFreeBlocks = this._blocksPerGPU;
+      gpu.kvAllocated = new Map(); // requestId → numBlocks
+      gpu.kvSessions = new Set();  // sessionIds with KV on this GPU
     }
-    this._blocksPerGPU = blocksPerGPU;
   }
 
   /**
    * Allocate blocks on a specific GPU for a request.
-   *
+   * O(1) — just decrement the free counter.
    * @returns {number} Number of blocks actually allocated.
    */
   _allocateBlocks(requestId, numBlocks, gpu) {
-    // Find the request to get its sessionId
-    const req = this._findRequest(requestId);
-    const sessionId = req ? req.sessionId : null;
+    const canAllocate = Math.min(numBlocks, gpu.kvFreeBlocks);
+    if (canAllocate <= 0) return 0;
 
-    let allocated = 0;
-    for (const block of this._kvBlocks) {
-      if (allocated >= numBlocks) break;
-      if (block.gpuId === gpu.id && !block.allocated) {
-        block.allocated = true;
-        block.requestId = requestId;
-        block.sessionId = sessionId;
-        allocated++;
-      }
+    gpu.kvFreeBlocks -= canAllocate;
+    const prev = gpu.kvAllocated.get(requestId) || 0;
+    gpu.kvAllocated.set(requestId, prev + canAllocate);
+
+    // Track session for KV-cache-aware routing
+    const req = this._findRequest(requestId);
+    if (req && req.sessionId != null) {
+      gpu.kvSessions.add(req.sessionId);
     }
-    return allocated;
+
+    return canAllocate;
   }
 
-  /** Free all KV blocks belonging to a request. */
+  /** Free all KV blocks belonging to a request. O(1). */
   _freeBlocks(requestId) {
-    for (const block of this._kvBlocks) {
-      if (block.requestId === requestId) {
-        block.allocated = false;
-        block.requestId = null;
-        block.sessionId = null;
-        block.hash = null;
+    for (const gpu of this._gpus) {
+      const blocks = gpu.kvAllocated.get(requestId);
+      if (blocks) {
+        gpu.kvFreeBlocks += blocks;
+        gpu.kvAllocated.delete(requestId);
       }
     }
   }
 
   /** Aggregate KV cache statistics. */
   _getKVStats() {
-    let total = this._kvBlocks.length;
-    let allocated = 0;
-    for (const block of this._kvBlocks) {
-      if (block.allocated) allocated++;
+    let total = 0;
+    let free = 0;
+    for (const gpu of this._gpus) {
+      total += this._blocksPerGPU;
+      free += gpu.kvFreeBlocks;
     }
     return {
       totalBlocks:     total,
-      freeBlocks:      total - allocated,
-      allocatedBlocks: allocated,
+      freeBlocks:      free,
+      allocatedBlocks: total - free,
     };
   }
 
@@ -573,6 +564,12 @@ export class VLLMEngine {
     this._pendingDecodeTransfers = [];
     this._nextRequestId = 0;
     this.stepCount = 0;
+    for (const gpu of this._gpus) {
+      gpu.activeRequests = [];
+      gpu.kvFreeBlocks = this._blocksPerGPU;
+      gpu.kvAllocated = new Map();
+      gpu.kvSessions = new Set();
+    }
   }
 
   _resetMetrics() {
@@ -635,26 +632,19 @@ export class VLLMEngine {
         gpuId:           r.gpuId,
       })),
 
-      gpus: this._gpus.map(gpu => {
-        // Count blocks used on this GPU
-        let blocksUsed = 0;
-        for (const block of this._kvBlocks) {
-          if (block.gpuId === gpu.id && block.allocated) blocksUsed++;
-        }
-        return {
-          id:             gpu.id,
-          role:           gpu.role,
-          activeRequests: gpu.activeRequests.map(r => ({
-            id:              r.id,
-            sessionId:       r.sessionId,
-            status:          r.status,
-            tokensGenerated: r.tokensGenerated,
-            outputTokens:    r.outputTokens,
-          })),
-          blocksUsed,
-          blocksTotal: this._blocksPerGPU,
-        };
-      }),
+      gpus: this._gpus.map(gpu => ({
+        id:             gpu.id,
+        role:           gpu.role,
+        activeRequests: gpu.activeRequests.map(r => ({
+          id:              r.id,
+          sessionId:       r.sessionId,
+          status:          r.status,
+          tokensGenerated: r.tokensGenerated,
+          outputTokens:    r.outputTokens,
+        })),
+        blocksUsed:  this._blocksPerGPU - gpu.kvFreeBlocks,
+        blocksTotal: this._blocksPerGPU,
+      })),
 
       kvCache: kvStats,
 

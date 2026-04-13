@@ -12,7 +12,7 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
     { id: 'engine',        label: 'Engine',        desc: 'Inference optimizations' },
     { id: 'cache',         label: 'Cache',          desc: 'KV cache strategy' },
     { id: 'orchestrator',  label: 'Orchestrator',  desc: 'Scaling & management' },
-    { id: 'hardware',      label: 'Hardware',      desc: 'GPUs & networking' },
+    { id: 'hardware',      label: 'Nodes',      desc: 'GPUs & networking' },
   ];
 
   return (
@@ -160,7 +160,7 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                 <label className="viz-select-label">Batch Size (maxNumSeqs)</label>
                 <select value={config.batchSize}
                   onChange={(e) => config.setBatchSize(parseInt(e.target.value))}
-                  disabled={isRunning} className="viz-select">
+                  className="viz-select">
                   {BATCH_SIZE_OPTIONS.map(bs => (
                     <option key={bs} value={bs}>{bs}</option>
                   ))}
@@ -169,8 +169,7 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
 
               <label className="viz-checkbox">
                 <input type="checkbox" checked={config.disaggregated}
-                  onChange={(e) => config.setDisaggregated(e.target.checked)}
-                  disabled={isRunning} />
+                  onChange={(e) => config.setDisaggregated(e.target.checked)} />
                 <span className="viz-checkbox-label">
                   <strong>Disaggregated Inference</strong>
                   <div className="viz-checkbox-desc">
@@ -183,7 +182,7 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                 <div className="viz-info-box">
                   <strong>Prefill vs Decode:</strong> Prefill is compute-heavy (TTFT),
                   decode is memory-bound (TPOT). Dedicating GPUs to each phase
-                  prevents head-of-line blocking. Configure pools in the Hardware tab.
+                  prevents head-of-line blocking. Configure pools in the Nodes tab.
                 </div>
               )}
 
@@ -234,31 +233,34 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
             <div className="viz-section">
               <label className="viz-checkbox">
                 <input type="checkbox" checked={config.autoscaling}
-                  onChange={(e) => config.setAutoscaling(e.target.checked)}
-                  disabled={config.disaggregated} />
+                  onChange={(e) => config.setAutoscaling(e.target.checked)} />
                 <span className="viz-checkbox-label">
                   <strong>Autoscaling</strong>
                   <div className="viz-checkbox-desc">
-                    Dynamically add/remove GPUs based on queue depth
+                    {config.disaggregated
+                      ? 'Dynamically scale decode GPU pool based on load'
+                      : 'Dynamically add/remove GPUs based on queue depth'}
                   </div>
                 </span>
               </label>
 
-              {config.disaggregated && (
-                <div className="viz-hint warning">
-                  Autoscaling is disabled when disaggregated inference is on --
-                  configure prefill/decode pools manually in Hardware.
-                </div>
-              )}
-
               <div className="viz-info-box">
                 {config.autoscaling ? (
-                  <>
-                    <strong>Enabled:</strong> The orchestrator monitors the request queue.
-                    When queue depth exceeds 10, a new GPU is provisioned.
-                    When all GPUs are idle, one is released.
-                    GPU count: <strong>{config.numGPUs}</strong> (auto-managed).
-                  </>
+                  config.disaggregated ? (
+                    <>
+                      <strong>Enabled:</strong> Decode pool scales independently.
+                      When all decode GPUs are saturated, a new one is added.
+                      When idle, one is released.
+                      Current: <strong>{config.prefillGPUs}P + {config.decodeGPUs}D</strong>.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Enabled:</strong> The orchestrator monitors the request queue.
+                      When queue depth exceeds 10, a new GPU is provisioned.
+                      When all GPUs are idle, one is released.
+                      GPU count: <strong>{config.numGPUs}</strong> (auto-managed).
+                    </>
+                  )
                 ) : (
                   <>
                     <strong>Fixed capacity:</strong> GPU count is static
@@ -272,14 +274,14 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
             </div>
           )}
 
-          {/* -- Hardware -- */}
+          {/* -- Nodes -- */}
           {activeTab === 'hardware' && (
             <div className="viz-section">
               <div className="viz-select-group">
                 <label className="viz-select-label">GPU Type</label>
                 <select value={config.gpuType}
                   onChange={(e) => config.setGpuType(e.target.value)}
-                  disabled={isRunning} className="viz-select">
+                  className="viz-select">
                   {Object.entries(GPU_SPECS).map(([id, g]) => (
                     <option key={id} value={id}>
                       {g.name} ({g.memoryGB}GB) -- {g.instance}
@@ -296,8 +298,8 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                       <span className="viz-slider-value">{config.prefillGPUs}</span>
                     </div>
                     <input type="range" min="1" max="16" value={config.prefillGPUs}
-                      onChange={(e) => !isRunning && config.setPrefillGPUs(parseInt(e.target.value))}
-                      disabled={isRunning} className="viz-slider" />
+                      onChange={(e) => config.setPrefillGPUs(parseInt(e.target.value))}
+                      className="viz-slider" />
                   </div>
                   <div className="viz-slider-group">
                     <div className="viz-slider-label">
@@ -305,15 +307,15 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                       <span className="viz-slider-value">{config.decodeGPUs}</span>
                     </div>
                     <input type="range" min="1" max="16" value={config.decodeGPUs}
-                      onChange={(e) => !isRunning && config.setDecodeGPUs(parseInt(e.target.value))}
-                      disabled={isRunning} className="viz-slider" />
+                      onChange={(e) => config.setDecodeGPUs(parseInt(e.target.value))}
+                      className="viz-slider" />
                   </div>
 
                   <div className="viz-select-group">
                     <label className="viz-select-label">Interconnect</label>
                     <select value={config.networkType}
                       onChange={(e) => config.setNetworkType(e.target.value)}
-                      disabled={isRunning} className="viz-select">
+                      className="viz-select">
                       <option value="efa">EFA (25 Gbps, ~0.5ms transfer)</option>
                       <option value="eth">Standard Ethernet (~3ms transfer)</option>
                     </select>
@@ -334,8 +336,8 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                     <span className="viz-slider-value">{config.numGPUs}</span>
                   </div>
                   <input type="range" min="1" max="32" value={config.numGPUs}
-                    onChange={(e) => !isRunning && !config.autoscaling && config.setNumGPUs(parseInt(e.target.value))}
-                    disabled={isRunning || config.autoscaling}
+                    onChange={(e) => !config.autoscaling && config.setNumGPUs(parseInt(e.target.value))}
+                    disabled={config.autoscaling}
                     className="viz-slider" />
                   {config.autoscaling && (
                     <div className="viz-hint">Managed by autoscaler</div>
@@ -349,9 +351,6 @@ export default function ConfigPanel({ config, isRunning, snapshot }) {
                 </div>
               )}
 
-              {isRunning && (
-                <div className="viz-hint warning">Stop simulation to change hardware</div>
-              )}
             </div>
           )}
         </div>

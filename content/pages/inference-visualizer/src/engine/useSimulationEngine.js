@@ -1,35 +1,45 @@
 import { useState, useEffect, useRef } from 'react';
+import {
+  getProfile,
+  calcMaxKVSessions,
+  BATCH_MAX_CONCURRENT,
+  BATCH_TTFT_MULTIPLIER,
+  NETWORK_TRANSFER_MS,
+} from './benchmarkData';
 
 /**
- * Custom hook that encapsulates all GPU inference simulation logic
- * Separates simulation engine from UI concerns
+ * GPU inference simulation engine.
+ *
+ * Every request goes through two phases — matching real LLM inference:
+ *   1. Prefill  — process all input tokens in parallel → first output token (TTFT)
+ *   2. Decode   — generate each subsequent token autoregressively (TPOT per token)
+ *
+ * Non-disaggregated: both phases on the same GPU, transition in-place.
+ * Disaggregated:     prefill GPU → network transfer → decode GPU.
+ * Cache hit:         skip prefill, go straight to decode.
  */
 export function useSimulationEngine({
-  // Environment config
   requestRate,
   continuationProbability,
   contextLength,
+  outputTokens,
   gpuUtilization,
-  
-  // Routing config
+  gpuType,
+  batchSize,
   kvCacheAware,
-  
-  // Engine config
   continuousBatching,
   pagedAttention,
-  
-  // Compute config
+  disaggregated,
+  distributedCache,
+  autoscaling,
+  networkType,
   numGPUs,
-  gpuType,
-  
-  // Control
+  setNumGPUs,
+  prefillGPUs,
+  decodeGPUs,
   isRunning,
   slowMode,
-  autoLoadTest,
 }) {
-  // ============================================================================
-  // STATE
-  // ============================================================================
   const [gpuStates, setGpuStates] = useState([]);
   const [requestQueue, setRequestQueue] = useState([]);
   const [metrics, setMetrics] = useState([]);
@@ -37,11 +47,7 @@ export function useSimulationEngine({
   const [cacheHits, setCacheHits] = useState(0);
   const [cacheMisses, setCacheMisses] = useState(0);
   const [cacheEvictions, setCacheEvictions] = useState(0);
-  const [maxSustainableRate, setMaxSustainableRate] = useState(null);
-  
-  // ============================================================================
-  // REFS (for access in intervals without re-triggering effects)
-  // ============================================================================
+
   const currentGPUIndex = useRef(0);
   const requestId = useRef(0);
   const sessionId = useRef(0);
@@ -50,212 +56,206 @@ export function useSimulationEngine({
   const queueSizeRef = useRef(0);
   const cacheHitsRef = useRef(0);
   const cacheMissesRef = useRef(0);
-  
   const activeSessions = useRef(new Map());
   const sessionLastActivity = useRef(new Map());
-  
-  // Running averages for smoother metrics (5 second window)
   const completedHistory = useRef([]);
   const latencyHistory = useRef([]);
   const gpuLoadHistory = useRef([]);
-  
-  // Auto-load test refs
-  const queueHistory = useRef([]);
-  const autoLoadRateRef = useRef(1);
-  const lastAdjustmentTime = useRef(Date.now());
-  
-  // ============================================================================
-  // HELPERS
-  // ============================================================================
-  
-  /**
-   * Calculate maximum KV cache sessions per GPU based on hardware and paged attention
-   */
-  const calculateMaxKVSessions = (gpuType, hasPagedAttention) => {
-    const gpuMemory = {
-      'a100': 80,  // 80 GB
-      'h100': 80,  // 80 GB
-      'l40s': 48,  // 48 GB
-      'a10g': 24   // 24 GB
-    };
-    
-    const totalMemory = gpuMemory[gpuType] || 80;
-    const kvBudget = totalMemory * 0.5; // 50% of GPU memory for KV cache
-    
-    // Without paged attention: 1 session per GB (memory fragmentation)
-    // With paged attention: 1000 sessions per GB (efficient block-based memory)
-    const sessionsPerGB = hasPagedAttention ? 1000 : 1;
-    
-    return Math.floor(kvBudget * sessionsPerGB);
-  };
-  
-  const maxKVSessionsPerGPU = calculateMaxKVSessions(gpuType, pagedAttention);
+  const pendingDecodesRef = useRef([]);
+
+  // ── Derived ──────────────────────────────────────────────────────
+
+  const totalGPUs = disaggregated ? prefillGPUs + decodeGPUs : numGPUs;
+  const profile = getProfile(gpuType);
+  const maxKVSessionsPerGPU = calcMaxKVSessions(gpuType, gpuUtilization, pagedAttention, contextLength);
   const speedMultiplier = slowMode ? 10 : 1;
-  
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-  
-  // Sync refs with state
+  const maxConcurrent = continuousBatching ? BATCH_MAX_CONCURRENT[batchSize] || batchSize : 1;
+  const networkLatencyMs = NETWORK_TRANSFER_MS[networkType] || 0;
+  const requestUtil = gpuUtilization;
+  const batchMultiplier = BATCH_TTFT_MULTIPLIER[batchSize] || 1.0;
+
+  const prefillLatencyMs = profile ? profile.ttftMs * batchMultiplier : 70;
+  const decodeLatencyMs = profile ? profile.tpotMs * (outputTokens - 1) : 100;
+
+  // ── Sync refs ────────────────────────────────────────────────────
+
+  useEffect(() => { gpuStatesRef.current = gpuStates; }, [gpuStates]);
+  useEffect(() => { queueSizeRef.current = requestQueue.length; }, [requestQueue.length]);
+  useEffect(() => { cacheHitsRef.current = cacheHits; cacheMissesRef.current = cacheMisses; }, [cacheHits, cacheMisses]);
+
+  // ── Init GPUs ────────────────────────────────────────────────────
+
   useEffect(() => {
-    gpuStatesRef.current = gpuStates;
-  }, [gpuStates]);
-  
-  useEffect(() => {
-    queueSizeRef.current = requestQueue.length;
-  }, [requestQueue.length]);
-  
-  useEffect(() => {
-    cacheHitsRef.current = cacheHits;
-    cacheMissesRef.current = cacheMisses;
-  }, [cacheHits, cacheMisses]);
-  
-  // Initialize GPU states when config changes
-  useEffect(() => {
-    const initialStates = Array(numGPUs).fill(null).map((_, i) => ({
+    const states = Array(totalGPUs).fill(null).map((_, i) => ({
       id: i,
+      role: disaggregated ? (i < prefillGPUs ? 'prefill' : 'decode') : 'general',
       activeRequests: [],
-      kvCacheSessions: new Map(),  // Map<sessionId, slotsUsed>
+      kvCacheSessions: new Map(),
       maxKVSessions: maxKVSessionsPerGPU,
     }));
-    setGpuStates(initialStates);
-    gpuStatesRef.current = initialStates;
+    setGpuStates(states);
+    gpuStatesRef.current = states;
     currentGPUIndex.current = 0;
-  }, [numGPUs, maxKVSessionsPerGPU, pagedAttention, gpuType]);
-  
-  // Session expiration - clean up old sessions from KV cache
+  }, [totalGPUs, maxKVSessionsPerGPU, pagedAttention, gpuType, disaggregated, prefillGPUs, decodeGPUs]);
+
+  // ── Session expiration ───────────────────────────────────────────
+
   useEffect(() => {
     if (!isRunning) return;
-    
     const interval = setInterval(() => {
       const now = Date.now();
-      const expireTime = 30000 * speedMultiplier;
-      
-      const expiredSessions = [];
-      sessionLastActivity.current.forEach((lastActivity, sessId) => {
-        if (now - lastActivity > expireTime) {
-          expiredSessions.push(sessId);
-        }
+      const expired = [];
+      sessionLastActivity.current.forEach((t, id) => {
+        if (now - t > 30000 * speedMultiplier) expired.push(id);
       });
-      
-      expiredSessions.forEach(sessId => {
-        activeSessions.current.delete(sessId);
-        sessionLastActivity.current.delete(sessId);
-        
+      expired.forEach(id => {
+        activeSessions.current.delete(id);
+        sessionLastActivity.current.delete(id);
         setGpuStates(prev => prev.map(gpu => {
-          const newKVSessions = new Map(gpu.kvCacheSessions);
-          newKVSessions.delete(sessId);
-          return {
-            ...gpu,
-            kvCacheSessions: newKVSessions
-          };
+          const kv = new Map(gpu.kvCacheSessions);
+          kv.delete(id);
+          return { ...gpu, kvCacheSessions: kv };
         }));
       });
     }, 5000 * speedMultiplier);
-    
     return () => clearInterval(interval);
   }, [isRunning, speedMultiplier]);
-  
-  // Request generation
+
+  // ── Request generation ───────────────────────────────────────────
+
   useEffect(() => {
     if (!isRunning) return;
-    
     const interval = setInterval(() => {
       const reqId = requestId.current++;
       setTotalRequests(prev => prev + 1);
-      
-      const isContinuation = Math.random() * 100 < continuationProbability;
-      
+
+      let isCont = false;
       let sessId;
-      
-      if (isContinuation && activeSessions.current.size > 0) {
-        const sessions = Array.from(activeSessions.current.keys());
-        sessId = sessions[Math.floor(Math.random() * sessions.length)];
-        isSessionContinuation = true;
+      if (Math.random() * 100 < continuationProbability && activeSessions.current.size > 0) {
+        const keys = Array.from(activeSessions.current.keys());
+        sessId = keys[Math.floor(Math.random() * keys.length)];
+        isCont = true;
       } else {
         sessId = sessionId.current++;
       }
-      
+
+      // Every request starts in prefill phase
       setRequestQueue(prev => [...prev, {
         id: reqId,
         sessionId: sessId,
-        isContinuation: isSessionContinuation,
+        isContinuation: isCont,
         timestamp: Date.now(),
-        contextLength: contextLength
+        contextLength,
+        phase: 'prefill',
       }]);
     }, (1000 / requestRate) * speedMultiplier);
-    
     return () => clearInterval(interval);
   }, [isRunning, requestRate, continuationProbability, contextLength, speedMultiplier]);
-  
-  // Request processing - assign requests from queue to GPUs
+
+  // ── Request processing ───────────────────────────────────────────
+
   useEffect(() => {
     if (!isRunning) return;
-    
     const interval = setInterval(() => {
       const now = Date.now();
-      
-      // STEP 1: Complete any requests that have finished
+
+      // STEP 1: Process completions and phase transitions.
+      // - Decode complete → fully done (count it)
+      // - Prefill complete, non-disagg → transition to decode in-place on same GPU
+      // - Prefill complete, disagg → collect in ref, re-queue for decode GPU
+      pendingDecodesRef.current = [];
+
       setGpuStates(prevStates => {
-        let completedCount = 0;
+        let fullyCompleted = 0;
         const updated = prevStates.map(gpu => {
-          const remaining = gpu.activeRequests.filter(req => {
-            if (now >= req.completionTime) {
-              completedCount++;
-              return false;
+          const active = [];
+          for (const req of gpu.activeRequests) {
+            if (now < req.completionTime) {
+              active.push(req);
+              continue;
             }
-            return true;
-          });
-          
-          return {
-            ...gpu,
-            activeRequests: remaining,
-            kvCacheSessions: gpu.kvCacheSessions
-          };
-        });
-        
-        completedInLastPeriod.current += completedCount;
-        return updated;
-      });
-      
-      // STEP 2: Assign new requests from queue to available GPUs
-      setRequestQueue(prev => {
-        if (prev.length === 0) return prev;
-        
-        const canBatch = continuousBatching;
-        const assignedRequests = [];
-        const tempReqCounts = gpuStatesRef.current.map(gpu => gpu.activeRequests.length);
-        
-        for (let i = 0; i < prev.length; i++) {
-          const request = prev[i];
-          const { sessionId: sessId, isContinuation, contextLength } = request;
-          let gpuIndex = null;
-          let hasKVCache = false;
-          
-          const slotsNeeded = Math.ceil(contextLength / 1000);
-          
-          // Find available GPUs
-          const availableGPUs = [];
-          for (let idx = 0; idx < numGPUs; idx++) {
-            const gpu = gpuStatesRef.current[idx];
-            const load = (tempReqCounts[idx] + 1) * gpuUtilization;
-            const hasComputeCapacity = canBatch ? load <= 100 : tempReqCounts[idx] === 0;
-            
-            const currentKVUsage = Array.from(gpu.kvCacheSessions.values())
-              .reduce((sum, slots) => sum + slots, 0);
-            const hasKVCapacity = gpu.kvCacheSessions.has(sessId) || 
-              (currentKVUsage + slotsNeeded) <= gpu.maxKVSessions;
-            
-            if (hasComputeCapacity && hasKVCapacity) {
-              availableGPUs.push(idx);
+
+            // This request's current phase is done
+            if (req.phase === 'decode') {
+              // Decode finished — request is fully complete
+              fullyCompleted++;
+            } else if (req.phase === 'prefill') {
+              if (disaggregated) {
+                // Re-queue for a decode GPU
+                pendingDecodesRef.current.push({
+                  id: requestId.current++,
+                  sessionId: req.sessionId,
+                  isContinuation: false,
+                  timestamp: now,
+                  contextLength: req.contextLength,
+                  phase: 'decode',
+                });
+              } else {
+                // Stay on same GPU, transition to decode in-place
+                const decodeMs = decodeLatencyMs * speedMultiplier;
+                active.push({
+                  ...req,
+                  phase: 'decode',
+                  latency: decodeLatencyMs,
+                  completionTime: now + decodeMs,
+                });
+              }
             }
           }
-          
-          if (availableGPUs.length === 0) break;
-          
-          // KV cache aware routing
-          if (kvCacheAware && isContinuation && availableGPUs.length > 0) {
-            for (const idx of availableGPUs) {
+          return { ...gpu, activeRequests: active };
+        });
+
+        completedInLastPeriod.current += fullyCompleted;
+        return updated;
+      });
+
+      // STEP 2: Flush disaggregated prefill→decode handoffs into the queue
+      if (pendingDecodesRef.current.length > 0) {
+        setRequestQueue(prev => [...prev, ...pendingDecodesRef.current]);
+      }
+
+      // STEP 3: Assign queued requests to GPUs
+      setRequestQueue(prev => {
+        if (prev.length === 0) return prev;
+
+        const assigned = [];
+        const tempCounts = gpuStatesRef.current.map(g => g.activeRequests.length);
+
+        for (let i = 0; i < prev.length; i++) {
+          const req = prev[i];
+          const { sessionId: sessId, isContinuation, phase } = req;
+          let gpuIndex = null;
+          let hasKVCache = false;
+          const slotsNeeded = Math.ceil(req.contextLength / 1000);
+
+          // Determine which GPUs this request can go to
+          let targetRole;
+          if (disaggregated) {
+            targetRole = phase === 'prefill' ? 'prefill' : 'decode';
+          } else {
+            targetRole = 'general';
+          }
+
+          const available = [];
+          for (let idx = 0; idx < gpuStatesRef.current.length; idx++) {
+            const gpu = gpuStatesRef.current[idx];
+            if (gpu.role !== targetRole) continue;
+            if (tempCounts[idx] >= maxConcurrent) continue;
+            const kvUsage = Array.from(gpu.kvCacheSessions.values()).reduce((s, v) => s + v, 0);
+            if (gpu.kvCacheSessions.has(sessId) || (kvUsage + slotsNeeded) <= gpu.maxKVSessions) {
+              available.push(idx);
+            }
+          }
+
+          if (available.length === 0) continue;
+
+          // KV-cache-aware routing for continuations
+          if (kvCacheAware && isContinuation && phase === 'prefill') {
+            const pool = distributedCache
+              ? gpuStatesRef.current.map((_, idx) => idx).filter(idx =>
+                  gpuStatesRef.current[idx].role === targetRole && tempCounts[idx] < maxConcurrent)
+              : available;
+            for (const idx of pool) {
               if (gpuStatesRef.current[idx].kvCacheSessions.has(sessId)) {
                 gpuIndex = idx;
                 hasKVCache = true;
@@ -263,192 +263,145 @@ export function useSimulationEngine({
               }
             }
           }
-          
-          // Fallback to round-robin
+
+          // Round-robin fallback
           if (gpuIndex === null) {
-            for (let attempts = 0; attempts < numGPUs; attempts++) {
-              const idx = (currentGPUIndex.current + attempts) % numGPUs;
-              
-              if (availableGPUs.includes(idx)) {
-                gpuIndex = idx;
-                hasKVCache = false;
-                currentGPUIndex.current = (idx + 1) % numGPUs;
-                break;
-              }
-            }
-            
-            if (gpuIndex === null) {
-              gpuIndex = availableGPUs[0];
-              currentGPUIndex.current = (availableGPUs[0] + 1) % numGPUs;
-            }
+            gpuIndex = available[currentGPUIndex.current % available.length];
+            currentGPUIndex.current = (currentGPUIndex.current + 1);
           }
-          
-          tempReqCounts[gpuIndex] += 1;
-          
-          // Track cache statistics
-          if (hasKVCache) {
-            setCacheHits(prev => prev + 1);
-          } else if (isContinuation) {
-            setCacheMisses(prev => prev + 1);
-          }
-          
-          assignedRequests.push({ request, gpuIndex, hasKVCache });
-          
-          if (!canBatch) break;
+
+          if (gpuIndex === null) continue;
+          tempCounts[gpuIndex] += 1;
+
+          if (hasKVCache) setCacheHits(p => p + 1);
+          else if (isContinuation) setCacheMisses(p => p + 1);
+
+          assigned.push({ request: req, gpuIndex, hasKVCache });
+          if (!continuousBatching) break;
         }
-        
-        // Apply assignments
-        if (assignedRequests.length > 0) {
-          const newGpuStates = gpuStatesRef.current.map(gpu => ({
-            ...gpu,
-            activeRequests: [...gpu.activeRequests],
-            kvCacheSessions: new Map(gpu.kvCacheSessions)
+
+        if (assigned.length > 0) {
+          const newStates = gpuStatesRef.current.map(g => ({
+            ...g,
+            activeRequests: [...g.activeRequests],
+            kvCacheSessions: new Map(g.kvCacheSessions),
           }));
-          
-          assignedRequests.forEach(({ request, gpuIndex, hasKVCache }) => {
-            const gpu = newGpuStates[gpuIndex];
-            
-            const slotsNeeded = Math.ceil(request.contextLength / 1000);
-            const latency = hasKVCache 
-              ? 50 * speedMultiplier
-              : (100 * slotsNeeded) * speedMultiplier;
-            const completionTime = now + latency;
-            
+
+          assigned.forEach(({ request, gpuIndex, hasKVCache }) => {
+            const gpu = newStates[gpuIndex];
+            const slots = Math.ceil(request.contextLength / 1000);
+
             if (!gpu.kvCacheSessions.has(request.sessionId)) {
-              gpu.kvCacheSessions.set(request.sessionId, slotsNeeded);
+              gpu.kvCacheSessions.set(request.sessionId, slots);
             }
-            
-            gpu.activeRequests.push({ 
-              ...request, 
-              latency: latency / speedMultiplier, 
+
+            // Determine phase and latency
+            let phase = request.phase;
+            let latencyMs;
+
+            if (hasKVCache && phase === 'prefill') {
+              // Cache hit: skip prefill entirely, go straight to decode
+              phase = 'decode';
+              latencyMs = decodeLatencyMs;
+            } else if (phase === 'prefill') {
+              latencyMs = prefillLatencyMs;
+            } else {
+              // Decode phase (from disaggregated handoff)
+              latencyMs = (disaggregated ? networkLatencyMs : 0) + decodeLatencyMs;
+            }
+
+            gpu.activeRequests.push({
+              ...request,
+              phase,
+              latency: latencyMs,
               hasKVCache,
-              completionTime
+              completionTime: now + (latencyMs * speedMultiplier),
             });
-            
+
             activeSessions.current.set(request.sessionId, gpuIndex);
             sessionLastActivity.current.set(request.sessionId, Date.now());
           });
-          
-          gpuStatesRef.current = newGpuStates;
-          setGpuStates(newGpuStates);
+
+          gpuStatesRef.current = newStates;
+          setGpuStates(newStates);
         }
-        
-        const assignedIds = new Set(assignedRequests.map(a => a.request.id));
-        return prev.filter(req => !assignedIds.has(req.id));
+
+        const ids = new Set(assigned.map(a => a.request.id));
+        return prev.filter(r => !ids.has(r.id));
       });
     }, 50 * speedMultiplier);
-    
     return () => clearInterval(interval);
-  }, [isRunning, gpuUtilization, continuousBatching, numGPUs, speedMultiplier, 
-      kvCacheAware, contextLength]);
-  
-  // Metrics calculation with 5-second running averages
+  }, [isRunning, continuousBatching, totalGPUs, speedMultiplier,
+      kvCacheAware, contextLength, maxConcurrent, gpuType,
+      batchSize, disaggregated, distributedCache, networkType,
+      prefillLatencyMs, decodeLatencyMs, networkLatencyMs]);
+
+  // ── Metrics ──────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!isRunning) return;
-    
     const interval = setInterval(() => {
-      const timestamp = Date.now();
-      const currentGpuStates = gpuStatesRef.current;
-      
-      // Calculate instantaneous values
-      const instantLatency = currentGpuStates.reduce((sum, gpu) => {
-        const gpuAvg = gpu.activeRequests.reduce((s, r) => s + (r.latency || 0), 0) / 
+      const states = gpuStatesRef.current;
+
+      const instantLatency = states.reduce((sum, gpu) => {
+        const avg = gpu.activeRequests.reduce((s, r) => s + (r.latency || 0), 0) /
           (gpu.activeRequests.length || 1);
-        return sum + gpuAvg;
-      }, 0) / (currentGpuStates.length || 1);
-      
+        return sum + avg;
+      }, 0) / (states.length || 1);
+
       const instantThroughput = completedInLastPeriod.current;
       completedInLastPeriod.current = 0;
-      
-      const instantGPULoad = currentGpuStates.reduce((sum, gpu) => {
-        return sum + (gpu.activeRequests.length * gpuUtilization);
-      }, 0) / currentGpuStates.length;
-      
-      // Add to history (keep 5 data points = 5 seconds)
+
+      const instantLoad = states.reduce((sum, gpu) =>
+        sum + Math.min(gpu.activeRequests.length * requestUtil, 100),
+      0) / states.length;
+
       completedHistory.current.push(instantThroughput);
       if (completedHistory.current.length > 5) completedHistory.current.shift();
-      
       latencyHistory.current.push(instantLatency);
       if (latencyHistory.current.length > 5) latencyHistory.current.shift();
-      
-      gpuLoadHistory.current.push(instantGPULoad);
+      gpuLoadHistory.current.push(instantLoad);
       if (gpuLoadHistory.current.length > 5) gpuLoadHistory.current.shift();
-      
-      // Calculate 5-second averages
-      const avgThroughput = completedHistory.current.reduce((a, b) => a + b, 0) / 
-        completedHistory.current.length;
-      const avgLatency = latencyHistory.current.reduce((a, b) => a + b, 0) / 
-        latencyHistory.current.length;
-      const avgGPULoad = gpuLoadHistory.current.reduce((a, b) => a + b, 0) / 
-        gpuLoadHistory.current.length;
-      
-      const totalCacheRequests = cacheHitsRef.current + cacheMissesRef.current;
-      const cacheHitRate = totalCacheRequests > 0 
-        ? (cacheHitsRef.current / totalCacheRequests) * 100 
-        : 0;
-      
+
+      const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+      const total = cacheHitsRef.current + cacheMissesRef.current;
+
       setMetrics(prev => [...prev, {
-        timestamp,
-        latency: avgLatency || 0,
-        throughput: avgThroughput || 0,
+        timestamp: Date.now(),
+        latency: avg(latencyHistory.current) || 0,
+        throughput: avg(completedHistory.current) || 0,
         queueSize: queueSizeRef.current,
-        gpuUtilization: avgGPULoad || 0,
-        cacheHitRate: cacheHitRate || 0
+        gpuUtilization: avg(gpuLoadHistory.current) || 0,
+        cacheHitRate: total > 0 ? (cacheHitsRef.current / total) * 100 : 0,
       }].slice(-100));
     }, 1000 * speedMultiplier);
-    
     return () => clearInterval(interval);
-  }, [isRunning, speedMultiplier, gpuUtilization]);
-  
-  // Auto-load test: Find max sustainable request rate
+  }, [isRunning, speedMultiplier, requestUtil]);
+
+  // ── Autoscaling ──────────────────────────────────────────────────
+
   useEffect(() => {
-    if (!isRunning || !autoLoadTest) return;
-    
+    if (!isRunning || !autoscaling || disaggregated) return;
     const interval = setInterval(() => {
-      const now = Date.now();
-      const currentQueue = queueSizeRef.current;
-      
-      queueHistory.current.push(currentQueue);
-      if (queueHistory.current.length > 10) {
-        queueHistory.current.shift();
-      }
-      
-      if (now - lastAdjustmentTime.current < 1000 * speedMultiplier) return;
-      
-      if (queueHistory.current.length >= 3) {
-        const recent = queueHistory.current.slice(-3);
-        const avgQueue = recent.reduce((a, b) => a + b, 0) / recent.length;
-        const queueTrend = recent[recent.length - 1] - recent[0];
-        
-        if (avgQueue < 5 && Math.abs(queueTrend) <= 2) {
-          autoLoadRateRef.current = Math.min(autoLoadRateRef.current * 1.25, 100);
-          lastAdjustmentTime.current = now;
-        } else if (queueTrend > 2 || avgQueue > 8) {
-          autoLoadRateRef.current = autoLoadRateRef.current * 0.9;
-          setMaxSustainableRate(Math.round(autoLoadRateRef.current));
-          lastAdjustmentTime.current = now;
+      const q = queueSizeRef.current;
+      if (q > 10 && numGPUs < 32) {
+        setNumGPUs(prev => Math.min(prev + 1, 32));
+      } else if (q === 0 && numGPUs > 1) {
+        if (gpuStatesRef.current.every(g => g.activeRequests.length === 0)) {
+          setNumGPUs(prev => Math.max(prev - 1, 1));
         }
       }
-    }, 500 * speedMultiplier);
-    
+    }, 3000 * speedMultiplier);
     return () => clearInterval(interval);
-  }, [isRunning, autoLoadTest, speedMultiplier]);
-  
-  // ============================================================================
-  // PUBLIC API
-  // ============================================================================
-  
+  }, [isRunning, autoscaling, disaggregated, numGPUs, setNumGPUs, speedMultiplier]);
+
+  // ── Reset ────────────────────────────────────────────────────────
+
   const reset = () => {
-    queueHistory.current = [];
-    autoLoadRateRef.current = 1;
-    lastAdjustmentTime.current = Date.now();
-    setMaxSustainableRate(null);
-    
-    // Clear running average histories
     completedHistory.current = [];
     latencyHistory.current = [];
     gpuLoadHistory.current = [];
-    
+    pendingDecodesRef.current = [];
     setRequestQueue([]);
     setMetrics([]);
     setTotalRequests(0);
@@ -462,35 +415,22 @@ export function useSimulationEngine({
     cacheMissesRef.current = 0;
     activeSessions.current.clear();
     sessionLastActivity.current.clear();
-    
-    const initialStates = Array(numGPUs).fill(null).map((_, i) => ({
+    const states = Array(totalGPUs).fill(null).map((_, i) => ({
       id: i,
+      role: disaggregated ? (i < prefillGPUs ? 'prefill' : 'decode') : 'general',
       activeRequests: [],
       kvCacheSessions: new Map(),
       maxKVSessions: maxKVSessionsPerGPU,
     }));
-    setGpuStates(initialStates);
-    gpuStatesRef.current = initialStates;
+    setGpuStates(states);
+    gpuStatesRef.current = states;
   };
-  
+
   return {
-    // State
-    gpuStates,
-    requestQueue,
-    metrics,
-    totalRequests,
-    cacheHits,
-    cacheMisses,
-    cacheEvictions,
-    maxSustainableRate,
-    
-    // Computed
-    maxKVSessionsPerGPU,
-    currentAutoLoadRate: autoLoadRateRef.current,
-    
-    // Actions
+    gpuStates, requestQueue, metrics, totalRequests,
+    cacheHits, cacheMisses, cacheEvictions,
+    maxKVSessionsPerGPU, profile, maxConcurrent, requestUtil,
+    prefillLatencyMs, decodeLatencyMs,
     reset,
   };
 }
-
-      let isSessionContinuation = false;

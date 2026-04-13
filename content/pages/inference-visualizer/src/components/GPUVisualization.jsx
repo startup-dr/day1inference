@@ -1,184 +1,157 @@
 import React from 'react';
 
-export default function GPUVisualization({ gpus, gpuUtilization }) {
-  // Compact grid view for >8 GPUs
-  if (gpus.length > 8) {
-    return (
-      <div className="viz-panel">
-        <h2>GPU Cluster</h2>
-        <div className="viz-gpu-grid-compact">
-          {gpus.map(gpu => {
-            const utilization = gpu.blocksTotal > 0
-              ? Math.min((gpu.blocksUsed / gpu.blocksTotal) * 100, 100)
-              : 0;
-            const hasPrefilling = gpu.activeRequests.some(r => r.status === 'PREFILLING');
+function CompactCard({ gpu, gpuUtilization }) {
+  const util = Math.min(gpu.activeRequests.length * gpuUtilization, 100);
+  const idle = gpu.activeRequests.length === 0;
+  const hasPrefill = gpu.activeRequests.some(r => r.status === 'PREFILLING');
+  const label = gpu.role !== 'general' ? `${gpu.role === 'prefill' ? 'P' : 'D'}${gpu.id}` : `G${gpu.id}`;
 
+  return (
+    <div style={{
+      background: 'white', border: '1px solid #e5e7eb', borderRadius: '4px',
+      padding: '4px 6px', opacity: idle ? 0.4 : 1, transition: 'opacity 0.3s',
+      overflow: 'hidden', minWidth: 0,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontSize: '10px', marginBottom: '2px' }}>
+        <span style={{ fontWeight: 600, color: '#374151' }}>{label}</span>
+        <span style={{ color: '#6b7280', fontSize: '9px' }}>{gpu.activeRequests.length}r</span>
+      </div>
+      <div style={{ fontSize: '12px', fontWeight: 700, color: '#7c3aed', marginBottom: '2px' }}>
+        {Math.round(util)}%
+      </div>
+      <div style={{ height: '4px', background: '#f3f4f6', borderRadius: '2px', overflow: 'hidden' }}>
+        <div style={{
+          width: `${util}%`, height: '100%', borderRadius: '2px', transition: 'width 0.2s',
+          background: util > 0 ? (hasPrefill ? '#10b981' : util >= 90 ? '#ef4444' : '#a855f7') : 'transparent',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function DetailedCard({ gpu, gpuUtilization }) {
+  const util = Math.min(gpu.activeRequests.length * gpuUtilization, 100);
+  const idle = gpu.activeRequests.length === 0;
+  const hasPrefill = gpu.activeRequests.some(r => r.status === 'PREFILLING');
+  const label = gpu.role !== 'general'
+    ? `${gpu.role === 'prefill' ? 'Prefill' : 'Decode'} ${gpu.id}`
+    : `GPU ${gpu.id}`;
+
+  return (
+    <div style={{
+      background: 'white', border: '1px solid #e5e7eb', borderRadius: '6px',
+      padding: '8px', opacity: idle ? 0.4 : 1, transition: 'opacity 0.3s',
+      overflow: 'hidden', minWidth: 0,
+    }}>
+      {/* Row 1: name + util */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+        <span style={{ fontSize: '13px', fontWeight: 700, color: '#7c3aed', flexShrink: 0, marginLeft: '4px' }}>{Math.round(util)}%</span>
+      </div>
+      {/* Row 2: request count */}
+      {!idle && (
+        <div style={{ fontSize: '10px', color: '#6b7280', marginBottom: '4px' }}>
+          {gpu.activeRequests.length} request{gpu.activeRequests.length > 1 ? 's' : ''}
+        </div>
+      )}
+      {/* Progress bar */}
+      <div style={{ height: '6px', background: '#f3f4f6', borderRadius: '3px', overflow: 'hidden', marginBottom: idle ? 0 : '4px' }}>
+        <div style={{
+          width: `${util}%`, height: '100%', borderRadius: '3px', transition: 'width 0.2s',
+          background: util > 0 ? (hasPrefill ? '#10b981' : util >= 90 ? '#ef4444' : '#a855f7') : 'transparent',
+        }} />
+      </div>
+      {/* Request details */}
+      {!idle && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          {gpu.activeRequests.slice(0, 3).map(req => {
+            const pct = req.outputTokens > 0 ? Math.round((req.tokensGenerated / req.outputTokens) * 100) : 0;
+            const isPre = req.status === 'PREFILLING';
             return (
-              <div key={gpu.id} className="viz-gpu-compact">
-                <div className="viz-gpu-compact-name">
-                  {gpu.role !== 'general'
-                    ? `${gpu.role === 'prefill' ? 'P' : 'D'}${gpu.id}`
-                    : `GPU ${gpu.id}`}
+              <div key={req.id} style={{ fontSize: '9px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <span style={{ color: isPre ? '#3b82f6' : '#f59e0b', fontWeight: 600, width: '10px', flexShrink: 0 }}>
+                  {isPre ? 'P' : 'D'}
+                </span>
+                <div style={{ flex: 1, height: '2px', background: '#e5e7eb', borderRadius: '1px', overflow: 'hidden', minWidth: 0 }}>
+                  <div style={{ width: `${pct}%`, height: '100%', background: isPre ? '#3b82f6' : '#f59e0b' }} />
                 </div>
-                <div className="viz-gpu-compact-stats">
-                  <span className="viz-gpu-compact-util">{Math.round(utilization)}%</span>
-                  <span className="viz-gpu-compact-reqs">{gpu.activeRequests.length} req</span>
-                </div>
-                <div className="viz-progress-compact">
-                  <div
-                    className={`viz-progress-bar ${
-                      utilization > 0
-                        ? hasPrefilling ? 'cache-hit' : utilization >= 90 ? 'high' : 'normal'
-                        : ''
-                    }`}
-                    style={{ width: `${utilization}%` }}
-                  />
-                </div>
-                <div className="viz-kv-compact">
-                  {gpu.blocksUsed}/{gpu.blocksTotal} blk
-                </div>
+                <span style={{ color: '#9ca3af', flexShrink: 0, fontSize: '8px' }}>
+                  {req.tokensGenerated}/{req.outputTokens}
+                </span>
               </div>
             );
           })}
+          {gpu.activeRequests.length > 3 && (
+            <div style={{ fontSize: '8px', color: '#9ca3af' }}>+{gpu.activeRequests.length - 3} more</div>
+          )}
         </div>
-        <div className="viz-info-box">
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '2px' }}></span>
-              Prefilling
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', background: '#a855f7', borderRadius: '2px' }}></span>
-              Decoding
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', background: '#ef4444', borderRadius: '2px' }}></span>
-              High load
-            </span>
+      )}
+    </div>
+  );
+}
+
+function GPUPool({ label, color, gpus, gpuUtilization, compact }) {
+  const Card = compact ? CompactCard : DetailedCard;
+  const minCard = compact ? '55px' : '90px';
+
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={{
+        fontSize: '9px', fontWeight: 700, color, marginBottom: '3px',
+        textTransform: 'uppercase', letterSpacing: '0.5px',
+        borderBottom: `2px solid ${color}`, paddingBottom: '2px',
+      }}>
+        {label} ({gpus.length})
+      </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(auto-fill, minmax(${minCard}, 1fr))`,
+        gap: compact ? '3px' : '5px',
+      }}>
+        {gpus.map(gpu => <Card key={gpu.id} gpu={gpu} gpuUtilization={gpuUtilization} />)}
+      </div>
+    </div>
+  );
+}
+
+export default function GPUVisualization({ gpus, gpuUtilization }) {
+  const hasRoles = gpus.some(g => g.role !== 'general');
+  const compact = gpus.length > 8;
+
+  if (hasRoles) {
+    const prefillGPUs = gpus.filter(g => g.role === 'prefill');
+    const decodeGPUs = gpus.filter(g => g.role === 'decode');
+    const prefillFlex = Math.max(1, prefillGPUs.length);
+    const decodeFlex = Math.max(1, decodeGPUs.length);
+
+    return (
+      <div className="viz-panel">
+        <h2>GPU Cluster</h2>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ flex: prefillFlex, minWidth: 0 }}>
+            <GPUPool label="Prefill" color="#3b82f6" gpus={prefillGPUs} gpuUtilization={gpuUtilization} compact={compact} />
+          </div>
+          <div style={{ width: '1px', background: '#e5e7eb', flexShrink: 0 }} />
+          <div style={{ flex: decodeFlex, minWidth: 0 }}>
+            <GPUPool label="Decode" color="#f59e0b" gpus={decodeGPUs} gpuUtilization={gpuUtilization} compact={compact} />
           </div>
         </div>
       </div>
     );
   }
 
-  // Detailed view for <=8 GPUs
+  const Card = compact ? CompactCard : DetailedCard;
+  const minCard = compact ? '55px' : '90px';
+
   return (
     <div className="viz-panel">
       <h2>GPU Cluster</h2>
-      <div className="viz-gpu-grid">
-        {gpus.map(gpu => {
-          const kvPercent = gpu.blocksTotal > 0
-            ? (gpu.blocksUsed / gpu.blocksTotal) * 100
-            : 0;
-          const isNearCapacity = kvPercent >= 80;
-          const isAtCapacity = kvPercent >= 100;
-
-          return (
-            <div key={gpu.id} className="viz-gpu">
-              <div className="viz-gpu-header">
-                <div className="viz-gpu-header-left">
-                  <span className="viz-gpu-name">
-                    {gpu.role !== 'general'
-                      ? `${gpu.role === 'prefill' ? 'Prefill' : 'Decode'} ${gpu.id}`
-                      : `GPU ${gpu.id}`}
-                  </span>
-                  <span className={`viz-kv-badge ${isAtCapacity ? 'critical' : isNearCapacity ? 'warning' : 'normal'}`}>
-                    {gpu.blocksUsed}/{gpu.blocksTotal} KV blocks
-                  </span>
-                </div>
-                <div className="viz-gpu-stats">
-                  {gpu.activeRequests.length > 0 ? (
-                    <span className="viz-badge-success">
-                      {gpu.activeRequests.length} req{gpu.activeRequests.length > 1 ? 's' : ''}
-                    </span>
-                  ) : (
-                    <span className="viz-badge-idle">Idle</span>
-                  )}
-                  <span className="viz-gpu-util">{Math.round(kvPercent)}%</span>
-                </div>
-              </div>
-              <div className="viz-progress">
-                <div
-                  className={`viz-progress-bar ${
-                    kvPercent > 0
-                      ? isAtCapacity ? 'high' : 'normal'
-                      : ''
-                  }`}
-                  style={{ width: `${Math.min(kvPercent, 100)}%` }}
-                />
-              </div>
-
-              {/* Active request details */}
-              {gpu.activeRequests.length > 0 && (
-                <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {gpu.activeRequests.slice(0, 5).map(req => {
-                    const progress = req.outputTokens > 0
-                      ? Math.round((req.tokensGenerated / req.outputTokens) * 100)
-                      : 0;
-                    const isPrefilling = req.status === 'PREFILLING';
-                    return (
-                      <div key={req.id} style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{
-                          color: isPrefilling ? '#3b82f6' : '#f59e0b',
-                          fontWeight: 'bold',
-                          minWidth: '50px',
-                        }}>
-                          {isPrefilling ? 'prefill' : 'decode'}
-                        </span>
-                        <span style={{ color: '#6b7280', minWidth: '30px' }}>R{req.id}</span>
-                        <div style={{
-                          flex: 1, height: '4px', background: '#e5e7eb', borderRadius: '2px', overflow: 'hidden',
-                        }}>
-                          <div style={{
-                            width: `${progress}%`,
-                            height: '100%',
-                            background: isPrefilling ? '#3b82f6' : '#f59e0b',
-                            borderRadius: '2px',
-                            transition: 'width 0.15s',
-                          }} />
-                        </div>
-                        <span style={{ color: '#9ca3af', minWidth: '48px', textAlign: 'right' }}>
-                          {req.tokensGenerated}/{req.outputTokens}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {gpu.activeRequests.length > 5 && (
-                    <div style={{ fontSize: '11px', color: '#9ca3af' }}>
-                      +{gpu.activeRequests.length - 5} more
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {isAtCapacity && (
-                <div className="viz-warning-box critical">
-                  KV cache at capacity - evictions will occur
-                </div>
-              )}
-              {isNearCapacity && !isAtCapacity && (
-                <div className="viz-warning-box warning">
-                  KV cache near capacity ({gpu.blocksUsed}/{gpu.blocksTotal})
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="viz-info-box">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', background: '#3b82f6', borderRadius: '2px' }}></span>
-              Prefilling
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '8px', height: '8px', background: '#f59e0b', borderRadius: '2px' }}></span>
-              Decoding
-            </span>
-          </div>
-          <div>KV blocks: per-GPU paged memory blocks for KV cache</div>
-        </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(auto-fill, minmax(${minCard}, 1fr))`,
+        gap: compact ? '3px' : '5px',
+      }}>
+        {gpus.map(gpu => <Card key={gpu.id} gpu={gpu} gpuUtilization={gpuUtilization} />)}
       </div>
     </div>
   );
