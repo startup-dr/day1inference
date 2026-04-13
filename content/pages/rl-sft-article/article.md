@@ -6,7 +6,10 @@ published: 2026-04-10
 updated: 2026-04-10
 authors:
   - Eric Saleh
+reviewers:
+  - Kareem Abdol-Hamid
 toc: true
+image: /rl-sft-article/assets/grpo-mechanism.svg
 description: How reinforcement learning complements supervised fine-tuning to unlock reasoning, tool calling, and optimization capabilities in large language models.
 ---
 

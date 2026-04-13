@@ -23,6 +23,12 @@
       "cards": [
         {
           "type": "article",
+          "status": "available",
+          "url": "/rl-sft-article",
+          "sourceType": "internal"
+        },
+        {
+          "type": "article",
           "title": "Best Practices for AI Evaluations",
           "description": "Proven methodologies and patterns for effective model evaluation",
           "status": "coming-soon",
