@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "webpack serve --open --hot",
-    "build": "NODE_ENV=production webpack"
+    "build": "NODE_ENV=production webpack",
+    "test": "node --test tests/engine.test.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",

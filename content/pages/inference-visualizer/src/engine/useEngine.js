@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { VLLMEngine } from './vllmEngine';
+import { VLLMEngine } from './vllmEngine.js';
 
 /**
  * Thin React hook wrapping VLLMEngine.
@@ -71,22 +71,65 @@ export function useEngine(config, isRunning) {
       // Advance simulation
       const snap = engine.step();
 
-      // Autoscaling (non-disaggregated only)
-      if (config.autoscaling && !config.disaggregated && config.setNumGPUs) {
-        if (snap.metrics.waitingCount > 10 && config.numGPUs < 32) {
-          config.setNumGPUs(prev => Math.min(prev + 1, 32));
-          idleStepsRef.current = 0;
-        } else if (
-          snap.metrics.waitingCount === 0 &&
-          snap.gpus.every(g => g.activeRequests.length === 0)
-        ) {
-          idleStepsRef.current += 1;
-          if (idleStepsRef.current >= 3 && config.numGPUs > 1) {
-            config.setNumGPUs(prev => Math.max(prev - 1, 1));
+      // Autoscaling — estimate needed capacity from actual load
+      if (config.autoscaling) {
+        const maxPerGPU = config.continuousBatching ? config.maxNumSeqs : 1;
+        const waiting = snap.metrics.waitingCount;
+        const running = snap.metrics.runningCount;
+
+        if (config.disaggregated) {
+          const prefillGPUs = snap.gpus.filter(g => g.role === 'prefill');
+          const decodeGPUs = snap.gpus.filter(g => g.role === 'decode');
+          const prefillLoad = prefillGPUs.reduce((s, g) => s + g.activeRequests.length, 0);
+          const decodeLoad = decodeGPUs.reduce((s, g) => s + g.activeRequests.length, 0);
+
+          // Prefill: scale based on waiting queue pressure
+          const prefillNeeded = Math.max(1, Math.ceil((prefillLoad + waiting) / maxPerGPU));
+          if (config.setPrefillGPUs) {
+            if (prefillNeeded > config.prefillGPUs && config.prefillGPUs < 16) {
+              config.setPrefillGPUs(Math.min(prefillNeeded, 16));
+            } else if (prefillNeeded < config.prefillGPUs && waiting === 0) {
+              idleStepsRef.current++;
+              if (idleStepsRef.current >= 3) {
+                config.setPrefillGPUs(prev => Math.max(prev - 1, 1));
+                idleStepsRef.current = 0;
+              }
+            }
+          }
+
+          // Decode: scale based on active decode load
+          const decodeNeeded = Math.max(1, Math.ceil(decodeLoad / maxPerGPU));
+          if (config.setDecodeGPUs) {
+            const decodeFull = decodeGPUs.length > 0 &&
+              decodeGPUs.every(g => g.activeRequests.length >= maxPerGPU);
+            if (decodeFull && config.decodeGPUs < 16) {
+              // Jump to needed + headroom
+              config.setDecodeGPUs(Math.min(decodeNeeded + 2, 16));
+            } else if (decodeNeeded < config.decodeGPUs - 1 && !decodeFull) {
+              // Excess capacity — scale down gradually
+              config.setDecodeGPUs(prev => Math.max(prev - 1, 1));
+            }
+          }
+
+          // Reset idle counter if neither pool scaled down
+          if (waiting > 0 || decodeLoad > 0) idleStepsRef.current = 0;
+
+        } else if (config.setNumGPUs) {
+          const needed = Math.max(1, Math.ceil((running + waiting) / maxPerGPU));
+
+          if (needed > config.numGPUs && config.numGPUs < 32) {
+            config.setNumGPUs(Math.min(needed + 1, 32));
+            idleStepsRef.current = 0;
+          } else if (needed < config.numGPUs - 1 && waiting === 0 &&
+                     snap.gpus.some(g => g.activeRequests.length === 0)) {
+            idleStepsRef.current++;
+            if (idleStepsRef.current >= 3) {
+              config.setNumGPUs(prev => Math.max(prev - 1, 1));
+              idleStepsRef.current = 0;
+            }
+          } else {
             idleStepsRef.current = 0;
           }
-        } else {
-          idleStepsRef.current = 0;
         }
       }
 
