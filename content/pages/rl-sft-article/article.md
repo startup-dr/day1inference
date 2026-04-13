@@ -23,7 +23,7 @@ The most dramatic demonstration of this came from OpenAI's o1 model (September 2
 This distinction matters more than it might first appear. It represents a shift from teaching by example to teaching by objective, and it unlocks categories of capability that imitation alone cannot reach.
 
 <figure>
-  <img src="./assets/sft-vs-rl-loop.svg" alt="SFT vs RL learning loop comparison: SFT learns from fixed data in a single pass while RL generates candidates, scores them, and loops.">
+  <img src="/rl-sft-article/assets/sft-vs-rl-loop.svg" alt="SFT vs RL learning loop comparison: SFT learns from fixed data in a single pass while RL generates candidates, scores them, and loops.">
   <figcaption>SFT learns from fixed data in a single pass. RL generates candidates, scores them, and loops — discovering strategies that were never in the training data.</figcaption>
 </figure>
 
@@ -100,7 +100,7 @@ For some tasks, the reward is natural and easy to verify. A SQL query either ret
 But many real-world tasks don't have clean, verifiable reward signals. How do you score the quality of a long-form explanation? A persuasive essay? You can use human evaluators, but that's expensive and slow — far too slow for the thousands or millions of reward queries that RL training requires. You can train a reward model to approximate human judgment, but now you're optimizing against a proxy (not the signal itself), and the model will find and exploit gaps between the proxy and what you actually care about.
 
 <figure>
-  <img src="./assets/reward-hacking.svg" alt="Reward hacking dynamics: proxy reward rises monotonically while true reward peaks then declines past the Goodhart's Law divergence point.">
+  <img src="/rl-sft-article/assets/reward-hacking.svg" alt="Reward hacking dynamics: proxy reward rises monotonically while true reward peaks then declines past the Goodhart's Law divergence point.">
   <figcaption>Reward hacking: the proxy reward keeps climbing while the true reward peaks and declines. Past the divergence point, more optimization makes the model worse.</figcaption>
 </figure>
 
@@ -139,7 +139,7 @@ SFT's role in that pipeline is to narrow the policy space. A base pretrained mod
 RL then takes over from that narrowed starting point. Instead of exploring the entire space of possible outputs (most of which are garbage), the RL policy starts in a region where most candidate responses are at least structurally plausible. Exploration becomes productive rather than random. The model can try variations on valid approaches and learn which ones score higher, instead of spending its exploration budget discovering that outputting song lyrics earns zero reward.
 
 <figure>
-  <img src="./assets/sft-rl-pipeline.svg" alt="SFT to RL pipeline: the same ambiguous prompt through base model, SFT model, and RL-tuned model showing progression from advice to format to judgment.">
+  <img src="/rl-sft-article/assets/sft-rl-pipeline.svg" alt="SFT to RL pipeline: the same ambiguous prompt through base model, SFT model, and RL-tuned model showing progression from advice to format to judgment.">
   <figcaption>The same ambiguous prompt through three stages: the base model gives advice, SFT produces the right format but guesses dangerously, RL learns to ask for clarification.</figcaption>
 </figure>
 
@@ -185,7 +185,7 @@ For most teams, the decision tree is:
 4. If quality judgments are inherently subjective and high-stakes (safety, tone, cultural sensitivity) → **RLHF** for tasks where fidelity justifies the annotation cost.
 
 <figure>
-  <img src="./assets/rl-flavor-decision-tree.svg" alt="RL flavor decision tree: flowchart from verification function availability through preference data to RLVR, DPO, RLAIF, or RLHF.">
+  <img src="/rl-sft-article/assets/rl-flavor-decision-tree.svg" alt="RL flavor decision tree: flowchart from verification function availability through preference data to RLVR, DPO, RLAIF, or RLHF.">
   <figcaption>Decision tree for choosing an RL flavor. Start with whether you can write a verification function, then follow the branches based on your data and evaluation capabilities.</figcaption>
 </figure>
 
@@ -210,7 +210,7 @@ Amazon SageMaker AI offers serverless model customization that removes the infra
 The service supports model families including Amazon Nova, Llama, Qwen, DeepSeek, and GPT-OSS, with techniques including Reinforcement Learning with Verifiable Rewards (RLVR), SFT, DPO, and RLAIF. For RLVR, you provide a dataset of prompts with ground-truth labels and a reward function that scores candidate responses against those labels. SageMaker AI generates multiple candidate responses per prompt (typically eight), scores each one, and uses Group Relative Policy Optimization (GRPO) to reinforce the responses that outperform the group average.
 
 <figure>
-  <img src="./assets/grpo-mechanism.svg" alt="GRPO training step: a single prompt generates 8 candidates, each scored by a reward function, with scores above the group mean reinforced and below penalized.">
+  <img src="/rl-sft-article/assets/grpo-mechanism.svg" alt="GRPO training step: a single prompt generates 8 candidates, each scored by a reward function, with scores above the group mean reinforced and below penalized.">
   <figcaption>GRPO in one step: generate candidates from a single prompt, score each with the reward function, then reinforce above-average and penalize below-average responses. No critic network needed.</figcaption>
 </figure>
 
