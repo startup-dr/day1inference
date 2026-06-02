@@ -42,10 +42,10 @@
       "cards": [
         {
           "type": "solution",
-          "title": "Multi-Region Inference Solution",
-          "description": "Multi-region inference orchestration and deployment framework",
-          "status": "coming-soon",
-          "url": ""
+          "title": "Global Capacity Orchestrator",
+          "description": "Multi-region inference orchestration and deployment framework: capacity-aware routing, single-command global inference, and one IAM-governed endpoint across every region",
+          "status": "available",
+          "url": "/global-capacity-orchestrator"
         }
       ]
     },

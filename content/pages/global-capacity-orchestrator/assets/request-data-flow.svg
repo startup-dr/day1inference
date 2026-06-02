@@ -1,0 +1,122 @@
+<svg viewBox="0 0 800 660" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-labelledby="d1-title d1-desc"
+     style="width:100%;height:auto;font-family:'Source Sans Pro',system-ui,sans-serif;">
+  <title id="d1-title">Top-level GCO request and data flow</title>
+  <desc id="d1-desc">A signed request enters through API Gateway, hands off to AWS Global
+    Accelerator, which routes to the nearest healthy region's ALB and then its EKS Auto Mode
+    cluster. GCO's capacity scoring and control element is drawn to the side, off this
+    synchronous path; it reads each region's Health Monitor signals and informs submission and
+    routing decisions.</desc>
+
+  <defs>
+    <linearGradient id="d1-regionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.9"/>
+    </linearGradient>
+    <marker id="d1-arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4361ee"/>
+    </marker>
+    <marker id="d1-arrow-hot" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#ff6b35"/>
+    </marker>
+  </defs>
+
+  <!-- Synchronous request spine -->
+  <g>
+    <rect x="225" y="20" width="210" height="56" rx="10" fill="#7c3aed"/>
+    <text x="330" y="44" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Client</text>
+    <text x="330" y="62" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">gco CLI · REST API · MCP</text>
+  </g>
+  <g>
+    <rect x="215" y="117" width="230" height="66" rx="10" fill="#4361ee"/>
+    <text x="330" y="142" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">API Gateway</text>
+    <text x="330" y="160" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">SigV4 · edge-optimized</text>
+    <text x="330" y="175" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">IAM auth required</text>
+  </g>
+  <g>
+    <rect x="205" y="223" width="250" height="66" rx="10" fill="#1a1a2e"/>
+    <text x="330" y="248" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">AWS Global Accelerator</text>
+    <text x="330" y="266" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">anycast · nearest healthy region</text>
+    <text x="330" y="281" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">automatic failover</text>
+  </g>
+
+  <line x1="330" y1="76" x2="330" y2="113" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+  <line x1="330" y1="183" x2="330" y2="219" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+
+  <line x1="330" y1="289" x2="95"  y2="381" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+  <line x1="330" y1="289" x2="290" y2="381" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+  <line x1="330" y1="289" x2="485" y2="381" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+  <line x1="330" y1="289" x2="680" y2="381" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+
+  <!-- Per-region columns: ALB (GA IPs only) -> EKS Auto Mode -->
+  <g>
+    <rect x="20" y="383" width="150" height="44" rx="8" fill="#f59e0b"/>
+    <text x="95" y="402" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">ALB</text>
+    <text x="95" y="418" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.9">GA IPs only</text>
+    <line x1="95" y1="427" x2="95" y2="478" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+    <rect x="10" y="480" width="170" height="96" rx="10" fill="url(#d1-regionGrad)"/>
+    <text x="95" y="502" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">us-east-1</text>
+    <text x="95" y="520" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">EKS Auto Mode</text>
+    <text x="95" y="538" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.95">NVIDIA GPU (g4dn/g5)</text>
+    <text x="95" y="558" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.8">Health Monitor</text>
+  </g>
+  <g>
+    <rect x="215" y="383" width="150" height="44" rx="8" fill="#f59e0b"/>
+    <text x="290" y="402" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">ALB</text>
+    <text x="290" y="418" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.9">GA IPs only</text>
+    <line x1="290" y1="427" x2="290" y2="478" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+    <rect x="205" y="480" width="170" height="96" rx="10" fill="url(#d1-regionGrad)"/>
+    <text x="290" y="502" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">us-west-2</text>
+    <text x="290" y="520" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">EKS Auto Mode</text>
+    <text x="290" y="538" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.95">AWS Trainium</text>
+    <text x="290" y="558" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.8">Health Monitor</text>
+  </g>
+  <g>
+    <rect x="410" y="383" width="150" height="44" rx="8" fill="#f59e0b"/>
+    <text x="485" y="402" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">ALB</text>
+    <text x="485" y="418" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.9">GA IPs only</text>
+    <line x1="485" y1="427" x2="485" y2="478" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+    <rect x="400" y="480" width="170" height="96" rx="10" fill="url(#d1-regionGrad)"/>
+    <text x="485" y="502" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">eu-west-1</text>
+    <text x="485" y="520" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">EKS Auto Mode</text>
+    <text x="485" y="538" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.95">AWS Inferentia</text>
+    <text x="485" y="558" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.8">Health Monitor</text>
+  </g>
+  <g>
+    <rect x="605" y="383" width="150" height="44" rx="8" fill="#f59e0b"/>
+    <text x="680" y="402" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">ALB</text>
+    <text x="680" y="418" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.9">GA IPs only</text>
+    <line x1="680" y1="427" x2="680" y2="478" stroke="#4361ee" stroke-width="2" marker-end="url(#d1-arrow)"/>
+    <rect x="595" y="480" width="170" height="96" rx="10" fill="url(#d1-regionGrad)"/>
+    <text x="680" y="502" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">ap-northeast-1</text>
+    <text x="680" y="520" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.9">EKS Auto Mode</text>
+    <text x="680" y="538" text-anchor="middle" fill="#ffffff" font-size="10" opacity="0.95">Graviton / CPU</text>
+    <text x="680" y="558" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.8">Health Monitor</text>
+  </g>
+
+  <!-- GCO control & scoring: off the request spine -->
+  <g>
+    <rect x="570" y="175" width="200" height="150" rx="12" fill="#ff6b35"/>
+    <text x="670" y="200" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">GCO control plane</text>
+    <text x="670" y="219" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.92">off the request path · advisory</text>
+    <text x="588" y="250" fill="#ffffff" font-size="10.5" opacity="0.96">• region scoring (capacity,</text>
+    <text x="598" y="266" fill="#ffffff" font-size="10.5" opacity="0.96">price, utilization, health)</text>
+    <text x="588" y="288" fill="#ffffff" font-size="10.5" opacity="0.96">• spot fallback</text>
+    <text x="588" y="310" fill="#ffffff" font-size="10.5" opacity="0.96">• submission &amp; routing</text>
+  </g>
+
+  <polyline points="765,510 785,510 785,250 772,250" fill="none" stroke="#ff6b35"
+            stroke-width="2" stroke-dasharray="5,4" marker-end="url(#d1-arrow-hot)"/>
+  <text transform="translate(796,415) rotate(-90)" text-anchor="middle" fill="#ff6b35"
+        font-size="10">per-region Health Monitor signals</text>
+
+  <polyline points="670,175 670,60 437,60" fill="none" stroke="#ff6b35"
+            stroke-width="2" stroke-dasharray="5,4" marker-end="url(#d1-arrow-hot)"/>
+  <text x="553" y="52" text-anchor="middle" fill="#ff6b35" font-size="10">informs submission &amp; routing</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="630" x2="100" y2="630" stroke="#4361ee" stroke-width="2"/>
+  <text x="108" y="634" fill="#6b7280" font-size="11">Synchronous request path</text>
+  <line x1="360" y1="630" x2="400" y2="630" stroke="#ff6b35" stroke-width="2" stroke-dasharray="5,4"/>
+  <text x="408" y="634" fill="#6b7280" font-size="11">GCO control plane — off-path (advisory)</text>
+</svg>
