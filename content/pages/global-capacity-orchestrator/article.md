@@ -16,7 +16,7 @@ Accelerator capacity is not where you want it, when you want it. The instance ty
 
 The [Global Capacity Orchestrator](https://github.com/awslabs/global-capacity-orchestrator-on-aws) (GCO) is an open-source platform that collapses that scramble down to one endpoint and one command. It is multi-region accelerated-compute orchestration for AWS: capacity-aware scheduling, spot fallback, and autoscaling inference endpoints with automatic failover and latency-aware routing, all behind a single REST API and CLI. One stack covers AI/ML end to end — training and batch jobs, global inference, and an optional notebook-analytics environment — and one command stands up every region you define.
 
-This article walks through how it works, the architecture decisions behind it, and the commands you'd actually run. It pairs naturally with the [Production Scale Inference Overview](/global-inference-serving), which covers the Global Accelerator + multi-region + EKS pattern in the abstract; GCO is one concrete, deployable implementation of that pattern.
+This article walks through how it works, the architecture decisions behind it, and the commands you'd actually run. It pairs naturally with the [Production Scale Inference Overview](https://day1inference.com/global-inference-serving), which covers the Global Accelerator + multi-region + EKS pattern in the abstract; GCO is one concrete, deployable implementation of that pattern.
 
 ## The capacity problem
 
@@ -386,4 +386,12 @@ GCO is released under MIT No Attribution (MIT-0), Copyright Amazon.com, Inc. or 
 The repository documents each subsystem in depth:
 
 - [GCO on GitHub](https://github.com/awslabs/global-capacity-orchestrator-on-aws) — the CLI, the CDK app, the docs, and the example jobs, all in one place.
-- [Production Scale Inference Overview](/global-inference-serving) — the Global Accelerator + multi-region + EKS pattern that GCO implements, covered in the abstract.
+- [Core Concepts](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/CONCEPTS.md) — what GCO does and the vocabulary the rest of the docs assume.
+- [Quick Start Guide](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/QUICKSTART.md) — the end-to-end walkthrough behind the commands above, timed at under 60 minutes.
+- [Architecture Details](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/ARCHITECTURE.md) — the request spine and the per-region EKS Auto Mode internals.
+- [CLI Reference](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/CLI.md) — every `gco` command, flag, and example used here.
+- [Inference Guide](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/INFERENCE.md) — multi-region deploys, canary/promote/rollback, and the S3-to-EFS weight sync.
+- [Analytics Guide](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/ANALYTICS.md) — the SageMaker Studio + EMR Serverless environment end to end.
+- [Mission Guide](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/docs/MISSION.md) — the five-phase loop and the deterministic verdict cascade.
+- [MCP Server](https://github.com/awslabs/global-capacity-orchestrator-on-aws/blob/main/mcp/README.md) — the tools that wrap the CLI for an AI-powered IDE.
+- [Production Scale Inference Overview](https://day1inference.com/global-inference-serving) — the Global Accelerator + multi-region + EKS pattern that GCO implements, covered in the abstract.
