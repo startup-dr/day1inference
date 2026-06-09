@@ -116,7 +116,7 @@ gco capacity reservation-check -i p5.48xlarge --block-duration 48
 gco capacity reserve -o cb-0123456789abcdef0 -r us-east-1 --dry-run
 ```
 
-To actually schedule onto reserved capacity, `gco nodepools create-odcr` generates a Karpenter nodepool pinned to a Capacity Reservation ID or ODCR group, so reserved instances are consumed by your workloads instead of sitting idle:
+To actually schedule onto reserved capacity, `gco nodepools create-odcr` generates a Karpenter nodepool manifest pinned to a Capacity Reservation ID or ODCR group (it prints the manifest, or writes it with `--output-file`, for you to `kubectl apply`), so reserved instances are consumed by your workloads instead of sitting idle:
 
 ```bash
 gco nodepools create-odcr --name gpu-reserved --region us-east-1 \
@@ -437,7 +437,7 @@ These are US East (N. Virginia) list prices and exclude NAT and Global Accelerat
 The example job above runs a stock image, but the path for your own workload is the same shape. To deploy something custom on GCO you need:
 
 - **A container image.** Use any public image, or build and push your own to the project's ECR registry with `gco images build ./my-app --name my-app` (or `gco images push` for an image built elsewhere). ECR replication makes it available in every region automatically.
-- **A Kubernetes manifest.** A standard Job or Deployment YAML — the quickest start is to copy the closest file under `examples/` and edit it. Submit it with `gco jobs submit-sqs` (queued, production path), `gco jobs submit` (synchronous via API Gateway), or chain several into a pipeline with `gco dag run`.
+- **A Kubernetes manifest.** A standard Job or Deployment YAML — the quickest start is to copy the closest file under `examples/` and edit it. Submit it with `gco jobs submit-sqs` (queued, production path), `gco jobs submit` (synchronous via API Gateway), `gco jobs submit-queue` (global DynamoDB queue for centralized cross-region tracking and regional pickup), or `gco jobs submit-direct` (straight to the cluster via kubectl, when you have EKS access) — or chain several into a pipeline with `gco dag run`.
 - **A way to target the right hardware.** Request `nvidia.com/gpu` to land on the GPU pools, pass `--accelerator neuron` (or request Neuron resources) for Trainium/Inferentia, and pin architecture with a `kubernetes.io/arch` node selector if it matters. Karpenter reads those requirements and provisions a matching node.
 - **Somewhere for outputs to live.** Mount the `gco-shared-storage` EFS volume so results persist after the pod terminates; for inference, stage model weights once in the central S3 bucket with `gco models upload` and reference them via `--model-source`.
 
