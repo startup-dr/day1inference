@@ -1,0 +1,100 @@
+<svg viewBox="0 0 820 480" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-labelledby="d3-title d3-desc"
+     style="width:100%;height:auto;font-family:'Source Sans Pro',system-ui,sans-serif;">
+  <title id="d3-title">GCO Mission five-phase iteration loop</title>
+  <desc id="d3-desc">A Mission iteration runs five phases in order: Propose, Execute, Observe,
+    Evaluate, and Decide. The Decide phase emits one of four verdicts. A verdict of continue or
+    adjust loops back to Propose for the next iteration; a verdict of complete or terminate exits
+    the session and emits the Final_Report. The control path is fully deterministic — every
+    verdict comes from a fixed cascade. Sampling is advisory only: when enabled it shapes the
+    next strategy proposed and the closing report notes, but never changes the verdict, the
+    loop-limit arithmetic, or the criterion evaluation.</desc>
+
+  <defs>
+    <linearGradient id="d3-phaseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4361ee" stop-opacity="0.97"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.95"/>
+    </linearGradient>
+    <marker id="d3-arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4361ee"/>
+    </marker>
+    <marker id="d3-arrow-branch" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#7c3aed"/>
+    </marker>
+    <marker id="d3-arrow-hot" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#ff6b35"/>
+    </marker>
+  </defs>
+
+  <text x="411" y="26" text-anchor="middle" fill="#4361ee" font-size="12.5" font-weight="700">The control path is fully deterministic — every verdict comes from a fixed cascade.</text>
+
+  <text x="411" y="92" text-anchor="middle" fill="#7c3aed" font-size="11" font-weight="600">verdict <tspan font-style="italic">continue</tspan> / <tspan font-style="italic">adjust</tspan> &#8594; loop back to Propose (next iteration)</text>
+  <polyline points="735,180 735,100 87,100 87,178" fill="none" stroke="#7c3aed"
+            stroke-width="2" marker-end="url(#d3-arrow-branch)"/>
+
+  <g>
+    <rect x="18" y="180" width="138" height="100" rx="11" fill="url(#d3-phaseGrad)"/>
+    <text x="87" y="204" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.85" font-weight="600" letter-spacing="0.05em">PHASE 1</text>
+    <text x="87" y="226" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="700">Propose</text>
+    <text x="87" y="247" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">pick next strategy</text>
+    <text x="87" y="261" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">(deterministic)</text>
+  </g>
+  <g>
+    <rect x="180" y="180" width="138" height="100" rx="11" fill="url(#d3-phaseGrad)"/>
+    <text x="249" y="204" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.85" font-weight="600" letter-spacing="0.05em">PHASE 2</text>
+    <text x="249" y="226" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="700">Execute</text>
+    <text x="249" y="247" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">dispatch tool calls</text>
+    <text x="249" y="261" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">or sandbox script</text>
+  </g>
+  <g>
+    <rect x="342" y="180" width="138" height="100" rx="11" fill="url(#d3-phaseGrad)"/>
+    <text x="411" y="204" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.85" font-weight="600" letter-spacing="0.05em">PHASE 3</text>
+    <text x="411" y="226" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="700">Observe</text>
+    <text x="411" y="247" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">normalise results into</text>
+    <text x="411" y="261" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">one Observation</text>
+  </g>
+  <g>
+    <rect x="504" y="180" width="138" height="100" rx="11" fill="url(#d3-phaseGrad)"/>
+    <text x="573" y="204" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.85" font-weight="600" letter-spacing="0.05em">PHASE 4</text>
+    <text x="573" y="226" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="700">Evaluate</text>
+    <text x="573" y="247" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">score vs every</text>
+    <text x="573" y="261" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">success Criterion</text>
+  </g>
+  <g>
+    <rect x="666" y="180" width="138" height="100" rx="11" fill="url(#d3-phaseGrad)"/>
+    <text x="735" y="204" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.85" font-weight="600" letter-spacing="0.05em">PHASE 5</text>
+    <text x="735" y="226" text-anchor="middle" fill="#ffffff" font-size="15" font-weight="700">Decide</text>
+    <text x="735" y="247" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">emit a Verdict</text>
+    <text x="735" y="261" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.92">+ reason</text>
+  </g>
+
+  <line x1="156" y1="230" x2="178" y2="230" stroke="#4361ee" stroke-width="2" marker-end="url(#d3-arrow)"/>
+  <line x1="318" y1="230" x2="340" y2="230" stroke="#4361ee" stroke-width="2" marker-end="url(#d3-arrow)"/>
+  <line x1="480" y1="230" x2="502" y2="230" stroke="#4361ee" stroke-width="2" marker-end="url(#d3-arrow)"/>
+  <line x1="642" y1="230" x2="664" y2="230" stroke="#4361ee" stroke-width="2" marker-end="url(#d3-arrow)"/>
+
+  <line x1="735" y1="280" x2="735" y2="358" stroke="#7c3aed" stroke-width="2" marker-end="url(#d3-arrow-branch)"/>
+  <text x="726" y="312" text-anchor="end" fill="#7c3aed" font-size="11" font-weight="600">verdict <tspan font-style="italic">complete</tspan> / <tspan font-style="italic">terminate</tspan></text>
+  <text x="726" y="327" text-anchor="end" fill="#7c3aed" font-size="11" font-weight="600">&#8594; exit</text>
+  <g>
+    <rect x="638" y="362" width="166" height="72" rx="12" fill="#f59e0b"/>
+    <text x="721" y="392" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">Session exits</text>
+    <text x="721" y="412" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.92">emits the Final_Report</text>
+  </g>
+
+  <g>
+    <rect x="18" y="362" width="262" height="72" rx="12" fill="#ff6b35"/>
+    <text x="149" y="386" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="700">Sampling — advisory only</text>
+    <text x="149" y="404" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.94">shapes the next strategy &amp; Final_Report notes —</text>
+    <text x="149" y="418" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.94">never the verdict, the caps, or the evaluation</text>
+  </g>
+  <line x1="87" y1="360" x2="87" y2="283" stroke="#ff6b35" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#d3-arrow-hot)"/>
+  <text x="95" y="326" fill="#ff6b35" font-size="9">advisory input</text>
+
+  <line x1="40" y1="460" x2="72" y2="460" stroke="#4361ee" stroke-width="2"/>
+  <text x="80" y="464" fill="#6b7280" font-size="11">Deterministic control flow</text>
+  <line x1="290" y1="460" x2="322" y2="460" stroke="#7c3aed" stroke-width="2"/>
+  <text x="330" y="464" fill="#6b7280" font-size="11">Verdict branch</text>
+  <line x1="470" y1="460" x2="502" y2="460" stroke="#ff6b35" stroke-width="2" stroke-dasharray="5,4"/>
+  <text x="510" y="464" fill="#6b7280" font-size="11">Advisory sampling (off the control path)</text>
+</svg>

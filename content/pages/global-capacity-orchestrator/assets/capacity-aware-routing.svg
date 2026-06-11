@@ -1,0 +1,99 @@
+<svg viewBox="0 0 820 430" xmlns="http://www.w3.org/2000/svg"
+     role="img" aria-labelledby="d2-title d2-desc"
+     style="width:100%;height:auto;font-family:'Source Sans Pro',system-ui,sans-serif;">
+  <title id="d2-title">Capacity-aware routing subsystem</title>
+  <desc id="d2-desc">Each region runs its own Health Monitor that publishes its own signal
+    set — spot placement scores, spot-vs-on-demand pricing, queue depth, GPU utilization, and
+    running job counts. GCO combines those signals into a weighted multi-signal score per
+    region; the highest-scoring region is chosen, and the job is submitted to that region's SQS
+    queue. There is no central dispatcher — scoring is decentralized and signals are per-region.</desc>
+
+  <defs>
+    <linearGradient id="d2-scoreGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.97"/>
+      <stop offset="100%" stop-color="#5b21b6" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="d2-regionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#059669" stop-opacity="0.9"/>
+    </linearGradient>
+    <marker id="d2-arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+      <polygon points="0 0, 10 4, 0 8" fill="#4361ee"/>
+    </marker>
+  </defs>
+
+  <text x="410" y="34" text-anchor="middle" fill="#ff6b35" font-size="12" font-weight="700">Decentralized routing: each region's Health Monitor publishes its own signal — there is no central dispatcher.</text>
+
+  <text x="95" y="88" text-anchor="middle" fill="#1a1a2e" font-size="10" font-weight="700">Per-region</text>
+  <text x="95" y="102" text-anchor="middle" fill="#1a1a2e" font-size="10" font-weight="700">Health Monitors</text>
+
+  <g>
+    <rect x="20" y="120" width="150" height="54" rx="9" fill="#1a1a2e"/>
+    <text x="95" y="143" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">us-east-1</text>
+    <text x="95" y="160" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.82">Health Monitor</text>
+  </g>
+  <g>
+    <rect x="20" y="186" width="150" height="54" rx="9" fill="#1a1a2e"/>
+    <text x="95" y="209" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">us-west-2</text>
+    <text x="95" y="226" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.82">Health Monitor</text>
+  </g>
+  <g>
+    <rect x="20" y="252" width="150" height="54" rx="9" fill="#1a1a2e"/>
+    <text x="95" y="275" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="600">eu-west-1</text>
+    <text x="95" y="292" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.82">Health Monitor</text>
+  </g>
+
+  <line x1="170" y1="147" x2="203" y2="147" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+  <line x1="170" y1="213" x2="203" y2="213" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+  <line x1="170" y1="279" x2="203" y2="279" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+
+  <rect x="205" y="110" width="225" height="240" rx="14" fill="#ffffff" stroke="#d1d5db" stroke-width="1.5"/>
+  <text x="317" y="134" text-anchor="middle" fill="#1a1a2e" font-size="13" font-weight="700">Scoring inputs</text>
+  <text x="317" y="150" text-anchor="middle" fill="#6b7280" font-size="8.5">weighted multi-signal · per region</text>
+
+  <g>
+    <rect x="222" y="164" width="191" height="28" rx="7" fill="#4361ee"/>
+    <text x="317" y="182" text-anchor="middle" fill="#ffffff" font-size="10.5">Spot placement scores</text>
+  </g>
+  <g>
+    <rect x="222" y="198" width="191" height="28" rx="7" fill="#4361ee"/>
+    <text x="317" y="216" text-anchor="middle" fill="#ffffff" font-size="10.5">Spot-vs-on-demand pricing</text>
+  </g>
+  <g>
+    <rect x="222" y="232" width="191" height="28" rx="7" fill="#4361ee"/>
+    <text x="317" y="250" text-anchor="middle" fill="#ffffff" font-size="10.5">Queue depth</text>
+  </g>
+  <g>
+    <rect x="222" y="266" width="191" height="28" rx="7" fill="#4361ee"/>
+    <text x="317" y="284" text-anchor="middle" fill="#ffffff" font-size="10.5">GPU utilization</text>
+  </g>
+  <g>
+    <rect x="222" y="300" width="191" height="28" rx="7" fill="#4361ee"/>
+    <text x="317" y="318" text-anchor="middle" fill="#ffffff" font-size="10.5">Running job counts</text>
+  </g>
+
+  <line x1="432" y1="230" x2="468" y2="230" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+
+  <g>
+    <rect x="470" y="192" width="140" height="78" rx="12" fill="url(#d2-scoreGrad)"/>
+    <text x="540" y="225" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Region score</text>
+    <text x="540" y="245" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.88">weighted &#931; signals</text>
+  </g>
+
+  <line x1="611" y1="231" x2="638" y2="231" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+
+  <g>
+    <rect x="640" y="192" width="150" height="78" rx="12" fill="url(#d2-regionGrad)"/>
+    <text x="715" y="225" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">Chosen region</text>
+    <text x="715" y="245" text-anchor="middle" fill="#ffffff" font-size="9" opacity="0.9">highest score wins</text>
+  </g>
+
+  <line x1="715" y1="271" x2="715" y2="329" stroke="#4361ee" stroke-width="2" marker-end="url(#d2-arrow)"/>
+  <text x="725" y="304" fill="#6b7280" font-size="9">submit</text>
+
+  <g>
+    <rect x="612" y="332" width="205" height="66" rx="12" fill="#f59e0b"/>
+    <text x="714" y="360" text-anchor="middle" fill="#ffffff" font-size="12.5" font-weight="700">Region's SQS queue</text>
+    <text x="714" y="379" text-anchor="middle" fill="#ffffff" font-size="9.5" opacity="0.92">gco jobs submit-sqs --region</text>
+  </g>
+</svg>
