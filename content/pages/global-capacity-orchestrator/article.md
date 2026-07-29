@@ -105,11 +105,11 @@ When the trade-offs are fuzzier than a weighted sum — "train a large model wit
 gco capacity ai-recommend --workload "Training a large language model"
 ```
 
-These recommendations are AI-generated and should be validated before making production decisions. Capacity availability and pricing can change rapidly. Once a region wins the score, the job goes to *that region's* SQS queue — the same decentralized path the diagram traces, with no global dispatcher in the middle.
+These recommendations are AI-generated and advisory only — validate them against your workload requirements and capacity constraints before making production decisions. Enable [Amazon Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) for content filtering on the model invocation. Capacity availability and pricing can change rapidly. Once a region wins the score, the job goes to *that region's* SQS queue — the same decentralized path the diagram traces, with no global dispatcher in the middle.
 
-### When you need guaranteed capacity: reservations and Capacity Blocks
+### When you need reserved capacity: reservations and Capacity Blocks
 
-Spot and on-demand cover most jobs, but large or time-boxed training runs often need capacity guaranteed in advance. GCO integrates EC2 reserved capacity directly. `gco capacity reservation-check` reports both existing On-Demand Capacity Reservations (ODCRs) and purchasable [Capacity Blocks for ML](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-blocks-using.html) — guaranteed GPU capacity for a fixed window at a known price — and `gco capacity reserve` purchases a block by its offering ID (with `--dry-run` to validate first, since the purchase incurs charges):
+Spot and on-demand cover most jobs, but large or time-boxed training runs often need capacity reserved in advance. GCO integrates EC2 reserved capacity directly. `gco capacity reservation-check` reports both existing On-Demand Capacity Reservations (ODCRs) and purchasable [Capacity Blocks for ML](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-blocks-using.html) — reserved GPU capacity for a fixed window at a known price — and `gco capacity reserve` purchases a block by its offering ID (with `--dry-run` to validate first, since the purchase incurs charges):
 
 ```bash
 gco capacity reservation-check -i p5.48xlarge --block-duration 48
@@ -239,6 +239,8 @@ gco mission status mission-abc123 --output table
 ```
 
 The surface around these two commands stays small and explicit: ten `gco mission` subcommands with matching MCP tools, plus three `mission://sessions/{id}` resource templates for reading a session back. You enable the feature once, declare a directive with its criteria, allowlist, and caps, and let the deterministic cascade decide when the work is done.
+
+> **Responsible AI considerations for Mission:** Mission uses AI to propose and execute strategies autonomously within the bounds you set. Enable [Amazon Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) for content filtering on model invocations. Review tool allowlists carefully — they are the primary safety boundary. Monitor session outputs and validate mission outcomes before relying on them for production decisions. The deterministic verdict cascade ensures bounded execution, but operators should treat AI-generated strategies as advisory and confirm results independently.
 
 ## Operate it conversationally: the MCP server
 

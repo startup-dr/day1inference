@@ -14,7 +14,7 @@ description: An introduction to production scale inference and the architecture 
 
 You've built an inference system that works. Your model serves requests, returns results, and handles the traffic your team throws at it. But somewhere between "it works on my cluster" and "it serves millions of users across the globe," there's a gap that catches most teams off guard.
 
-Production scale inference is where model serving meets distributed systems engineering. The challenge isn't just making a model fast. It's making an entire system reliable, responsive, and cost-effective when your users span continents, your traffic swings 10x between peak and quiet hours, and your hardware costs tens of thousands of dollars per node.
+Production scale inference is where model serving meets distributed systems engineering. The challenge isn't just making a model fast. It's making an entire system reliable, responsive, and cost-effective when your users span continents, your traffic can swing 10x or more between peak and quiet hours, and your hardware costs tens of thousands of dollars per node.
 
 This article is an introduction to that problem space. We'll walk through the fundamental tensions that make production inference hard, the key questions you need to answer before building anything, and a concrete architecture pattern that addresses them. If you're moving from a working prototype to a production deployment, or if you're evaluating how to expand an existing system globally, this is where to start.
 
@@ -28,7 +28,7 @@ Three tensions define production inference, and every architectural decision you
 
 ### Latency vs. Geography
 
-GPU compute is expensive and concentrated. You can't put a cluster in every city. But physics is unforgiving. Light in fiber travels at roughly 200 km/ms<d-cite key="grigorik2013"></d-cite><d-cite key="malitson1965"></d-cite>, which means a round-trip from Singapore to us-east-1 adds around 150ms of network latency before your model processes a single token. For applications targeting sub-100ms time to first token, that network penalty alone can blow your latency budget.
+GPU compute is expensive and concentrated. You can't put a cluster in every city. But physics is unforgiving. Light in fiber travels at roughly 200 km/ms<d-cite key="grigorik2013"></d-cite><d-cite key="malitson1965"></d-cite>, which means a round-trip from Singapore to us-east-1 adds around 150ms of network latency (calculated from ~15,000 km distance at fiber propagation speed) before your model processes a single token. For applications targeting sub-100ms time to first token, that network penalty alone can blow your latency budget.
 
 The question isn't whether multi-region matters. It's *when* it starts mattering for your use case, and how many regions you actually need. A product with 95% of users in North America has a very different answer than one with a global user base.
 
@@ -71,7 +71,7 @@ With that context, we can look at a concrete pattern that addresses the tensions
 
 Each layer exists because it solves a specific problem from the tensions we discussed.
 
-**Global Accelerator** solves the "single stable endpoint" problem. It gives you two static anycast IP addresses<d-cite key="rfc4786"></d-cite> that work from anywhere in the world. Users in Tokyo, London, and São Paulo all connect to the same addresses. From there, traffic enters AWS's private backbone at the nearest edge location and travels to the closest healthy region, rather than bouncing across the public internet.<d-cite key="schlinker2017"></d-cite> AWS's own benchmarks show this can [improve performance by up to 60%](https://aws.amazon.com/blogs/networking-and-content-delivery/measuring-aws-global-accelerator-performance-and-analyzing-results/) compared to public internet routing.<d-cite key="aws_ga_performance"></d-cite><d-cite key="aws_ga_faq"></d-cite> Critically, because these are anycast IPs rather than DNS records, failover is instant. There's no DNS TTL to wait out.
+**Global Accelerator** solves the "single stable endpoint" problem. It gives you two static anycast IP addresses<d-cite key="rfc4786"></d-cite> that work from anywhere in the world. Users in Tokyo, London, and São Paulo all connect to the same addresses. From there, traffic enters AWS's private backbone at the nearest edge location and travels to the closest healthy region, rather than bouncing across the public internet.<d-cite key="schlinker2017"></d-cite> AWS's own benchmarks show this can [improve performance by up to 60%](https://aws.amazon.com/blogs/networking-and-content-delivery/measuring-aws-global-accelerator-performance-and-analyzing-results/) compared to public internet routing.<d-cite key="aws_ga_performance"></d-cite> Critically, because these are anycast IPs rather than DNS records, failover is instant. There's no DNS TTL to wait out.
 
 **Application Load Balancers** solve regional traffic distribution. In each region, an ALB sits between Global Accelerator and your Kubernetes services. It handles health checks, SSL termination, and path-based routing. The ALB is created automatically by the AWS Load Balancer Controller in EKS when you deploy an Ingress resource, so it fits naturally into a Kubernetes-native workflow.
 
